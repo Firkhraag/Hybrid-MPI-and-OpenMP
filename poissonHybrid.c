@@ -79,9 +79,9 @@ float yj(const int b1, const int localIndex, const int processOffset, const int 
 
 // Laplace difference scheme
 float laplaceDiffScheme(float* grid, const int i, const int j, const int blockWidth, const int stepX, const int stepY,
-                        const int stepXCoeff, const int stepYCoeff, const int a1, const int b1) {
-    const float x = xi(a1, i, 1, stepX);
-    const float y = yj(b1, j, 1, stepY);
+                        const int stepXCoeff, const int stepYCoeff, const int a1, const int b1, const float startX, const float startY) {
+    const float x = xi(a1, i, startX, stepX);
+    const float y = yj(b1, j, startY, stepY);
     const int index = i * blockWidth + j;
     return -(stepXCoeff * (k(x + 0.5 * stepX) * (grid[index + blockWidth] - grid[index]) -
         k(x - 0.5 * stepX) * (grid[index] - grid[index - blockWidth])) +
@@ -227,7 +227,7 @@ void passInformationBetweenProcesses(const int currentRank, const int numOfBlock
             for (i = 0; i < height; i++) {
                 sendRight[i] = grid[(i + 1) * blockWidth + width];
             }
-            MPI_Isend(sendRight, height, MPI_FLOAT, rightNeighborRank, 0, MPI_COMM_WORLD, &rightNeighborRank);
+            MPI_Isend(sendRight, height, MPI_FLOAT, rightNeighborRank, 0, MPI_COMM_WORLD, &rightSendRequest);
 	    }
     }
 
@@ -310,7 +310,7 @@ int main(int argc, char **argv) {
     const float eps = 1e-3;
 
     // Square grid
-    const int n = 20;
+    const int n = 40;
     // From 0 to n
     // const int dim = (n + 1) * (n + 1);
 
@@ -357,10 +357,10 @@ int main(int argc, char **argv) {
 	const int blockSizeX = (n - 1) / numOfBlocksX;
 	const int blockSizeY = (n - 1) / numOfBlocksY;
 
-	const int startX = max(0, blockSizeX * blockPositionX - 1);
+	const int startX = fmax(0, blockSizeX * blockPositionX - 1);
 	const int endX = blockPositionX + 1 < numOfBlocksX ? startX + blockSizeX : n;
 
-	const int startY = max(0, blockSizeY * blockPositionY - 1);
+	const int startY = fmax(0, blockSizeY * blockPositionY - 1);
 	const int endY = blockPositionY + 1 < numOfBlocksY ? startY + blockSizeY : n;
 
 	const int blockHeight = endX - startX + 1;
@@ -440,20 +440,20 @@ int main(int argc, char **argv) {
         for (i = 1; i < blockHeight - 1; i++) {
             for (j = 1; j < blockWidth - 1; j++) {
                 rk[i * blockWidth + j] =
-                    laplaceDiffScheme(grid, i, j, n, stepX, stepY, stepXCoeff, stepYCoeff, a1, b1) -
+                    laplaceDiffScheme(grid, i, j, n, stepX, stepY, stepXCoeff, stepYCoeff, a1, b1, startX, startY) -
                     F(xi(a1, i, startX, stepX), yj(b1, j, startY, stepY));
             }
         }
 
         // Pass residuals to adjacent processes
-        passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, n, blockWidth, blockHeight);
+        passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
 
         // Find A * rk
         #pragma omp parallel for schedule (static)
         for (i = 1; i < blockHeight - 1; i++) {
             for (j = 1; j < blockWidth - 1; j++) {
                 ark[i * blockWidth + j] =
-                    laplaceDiffScheme(rk, i, j, n, stepX, stepY, stepXCoeff, stepYCoeff, a1, b1);
+                    laplaceDiffScheme(rk, i, j, n, stepX, stepY, stepXCoeff, stepYCoeff, a1, b1, startX, startY);
             }
         }
 
@@ -492,7 +492,7 @@ int main(int argc, char **argv) {
 
     // Deviation
     float localError = 0;
-    #pragma omp parallel for schedule (static) reduction(+:error)
+    #pragma omp parallel for schedule (static) reduction(+:localError)
     for (i = 1; i < blockHeight - 1; i++) {
         for (j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
@@ -521,7 +521,7 @@ int main(int argc, char **argv) {
         printf("Error opening file!\n");
         exit(1);
     }
-    
+
     gettimeofday(&end, NULL);
     double time_taken = end.tv_sec + end.tv_usec / 1e6 -
                         start.tv_sec - start.tv_usec / 1e6; // in seconds
