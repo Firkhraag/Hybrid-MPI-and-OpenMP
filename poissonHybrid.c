@@ -410,6 +410,8 @@ int main(int argc, char **argv) {
 		for (j = 1; j < blockWidth - 1; j++) {
 			realValues[i * blockWidth + j] = u(xi(a1, i, startX, stepX), yj(b1, j, startY, stepY));
             printf("Real value: %f\n", realValues[i * blockWidth + j]);
+            printf("i: %d\n", i);
+            printf("j: %d\n", j);
             printf("X: %f\n", xi(a1, i, startX, stepX));
             printf("Y: %f\n", yj(b1, j, startY, stepY));
 		}
