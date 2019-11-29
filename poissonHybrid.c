@@ -405,7 +405,7 @@ int main(int argc, char **argv) {
     float stopCondition;
 
     // Find real values in the block
-	#pragma omp parallel for schedule (static)
+	// #pragma omp parallel for schedule (static)
 	for (i = 1; i < blockHeight - 1; i++) {
 		for (j = 1; j < blockWidth - 1; j++) {
 			realValues[i * blockWidth + j] = u(xi(a1, i, startX, stepX), yj(b1, j, startY, stepY));
