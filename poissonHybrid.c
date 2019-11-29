@@ -27,6 +27,11 @@ float F(float x, float y) {
 
 // Grid steps
 float xi(const int a1, const int localIndex, const int processOffset, const int stepX) {
+    printf("wtf: %f\n", a1 + (localIndex + processOffset) * stepX);
+    printf("wtf: %f\n", a1);
+    printf("wtf: %f\n", localIndex);
+    printf("wtf: %f\n", processOffset);
+    printf("wtf: %f\n", stepX);
     return a1 + (localIndex + processOffset) * stepX;
 }
 
