@@ -414,7 +414,6 @@ int main(int argc, char **argv) {
 	for (i = 1; i < blockHeight - 1; i++) {
 		for (j = 1; j < blockWidth - 1; j++) {
 			realValues[i * blockWidth + j] = u(a1 + (i + startX) * stepX, b1 + (j + startY) * stepY);
-            printf("Real value: %f\n", realValues[i * blockWidth + j]);
 		}
 	}
 
@@ -423,6 +422,7 @@ int main(int argc, char **argv) {
         #pragma omp parallel for schedule (static)
 		for (j = 0; j < blockWidth; j++) {
 			grid[j] = u(a1 + startX * stepX, b1 + (j + startY) * stepY);
+            printf("Boundaries 1: %f\n", grid[j]);
 		}
 	}
 
@@ -430,6 +430,7 @@ int main(int argc, char **argv) {
         #pragma omp parallel for schedule (static)
 		for (j = 0; j < blockWidth; j++) {
             grid[(blockHeight - 1) * blockWidth + j] = u(a1 + (blockHeight - 1 + startX) * stepX, b1 + (j + startY) * stepY);
+            printf("Boundaries 2: %f\n", grid[(blockHeight - 1) * blockWidth + j]);
 		}
 	}
 
@@ -437,6 +438,7 @@ int main(int argc, char **argv) {
         #pragma omp parallel for schedule (static)
 		for (i = 0; i < blockHeight; i++) {
             grid[i * blockWidth] = u(a1 + (i + startX) * stepX, b1 + startY * stepY);
+            printf("Boundaries 3: %f\n", grid[i * blockWidth]);
 		}
 	}
 
@@ -444,6 +446,7 @@ int main(int argc, char **argv) {
         #pragma omp parallel for schedule (static)
 		for (i = 0; i < blockHeight; i++) {
             grid[i * blockWidth + (blockWidth - 1)] = u(a1 + (i + startX) * stepX, b1 + (blockWidth - 1 + startY) * stepY);
+            printf("Boundaries 4: %f\n", grid[i * blockWidth + (blockWidth - 1)]);
 		}
     }
 
