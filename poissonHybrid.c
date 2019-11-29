@@ -366,6 +366,20 @@ int main(int argc, char **argv) {
 	const int blockHeight = endX - startX + 1;
 	const int blockWidth = endY - startY + 1;
 
+    printf("------\n");
+    printf("Size: %d\n", size);
+    printf("Rank: %d\n", currentRank);
+    printf("NumOfBlocksY: %d\n", numOfBlocksY);
+    printf("NumOfBlocksX: %d\n", numOfBlocksX);
+    printf("BlockPositionX: %d\n", blockPositionX);
+    printf("BlockPositionY: %d\n", blockPositionY);
+    printf("BlockSizeX: %d\n", blockSizeX);
+    printf("BlockSizeY: %d\n", blockSizeY);
+    printf("StartX: %d\n", startX);
+    printf("EndX: %d\n", endX);
+    printf("StartY: %d\n", startY);
+    printf("EndY: %d\n", endY);
+    printf("BlockHeight: %d\n", blockHeight);
 
     // Local grid approximation
     float* grid = (float*)malloc(blockWidth * blockHeight * sizeof(float));
