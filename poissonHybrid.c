@@ -84,7 +84,7 @@ float F(float x, float y) {
 
 // Laplace difference scheme
 float laplaceDiffScheme(float* grid, const float x, const float y, const int index, const int stepX, const int stepY,
-                        const int stepXCoeff, const int stepYCoeff) {
+                        const int stepXCoeff, const int stepYCoeff, const int blockWidth) {
 
     return -(stepXCoeff * (k(x + 0.5 * stepX) * (grid[index + blockWidth] - grid[index]) -
         k(x - 0.5 * stepX) * (grid[index] - grid[index - blockWidth])) +
@@ -461,8 +461,7 @@ int main(int argc, char **argv) {
                 const float y = b1 + (j + startY) * stepY;
                 const int index = i * blockWidth + j;
                 rk[i * blockWidth + j] =
-                    laplaceDiffScheme(grid, x, y, index, stepX, stepY, stepXCoeff, stepYCoeff) -
-                    F(x, y);
+                    laplaceDiffScheme(grid, x, y, index, stepX, stepY, stepXCoeff, stepYCoeff, blockWidth) - F(x, y);
                 printf("Values: %f\n", rk[i * blockWidth + j]);
                 printf("Values F: %f\n", F(x, y));
             }
@@ -478,7 +477,7 @@ int main(int argc, char **argv) {
                 const float x = a1 + (i + startX) * stepX;
                 const float y = b1 + (j + startY) * stepY;
                 const int index = i * blockWidth + j;
-                ark[index] = laplaceDiffScheme(rk, x, y, index, stepX, stepY, stepXCoeff, stepYCoeff);
+                ark[index] = laplaceDiffScheme(rk, x, y, index, stepX, stepY, stepXCoeff, stepYCoeff, blockWidth);
             }
         }
 
