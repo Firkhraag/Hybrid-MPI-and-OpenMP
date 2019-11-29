@@ -83,11 +83,9 @@ float F(float x, float y) {
 // }
 
 // Laplace difference scheme
-float laplaceDiffScheme(float* grid, const int i, const int j, const int blockWidth, const int stepX, const int stepY,
-                        const int stepXCoeff, const int stepYCoeff, const int a1, const int b1, const float startX, const float startY) {
-    const float x = a1 + (i + startX) * stepX;
-    const float y = b1 + (j + startY) * stepY;
-    const int index = i * blockWidth + j;
+float laplaceDiffScheme(float* grid, const float x, const float y, const int index, const int stepX, const int stepY,
+                        const int stepXCoeff, const int stepYCoeff) {
+                            
     return -(stepXCoeff * (k(x + 0.5 * stepX) * (grid[index + blockWidth] - grid[index]) -
         k(x - 0.5 * stepX) * (grid[index] - grid[index - blockWidth])) +
         stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) - (grid[index] - grid[index - 1]))) +
@@ -410,7 +408,7 @@ int main(int argc, char **argv) {
     float stopCondition;
 
     // Find real values in the block
-	// #pragma omp parallel for schedule (static)
+	#pragma omp parallel for schedule (static)
 	for (i = 1; i < blockHeight - 1; i++) {
 		for (j = 1; j < blockWidth - 1; j++) {
 			realValues[i * blockWidth + j] = u(a1 + (i + startX) * stepX, b1 + (j + startY) * stepY);
@@ -459,9 +457,12 @@ int main(int argc, char **argv) {
         #pragma omp parallel for schedule (static)
         for (i = 1; i < blockHeight - 1; i++) {
             for (j = 1; j < blockWidth - 1; j++) {
+                const float x = a1 + (i + startX) * stepX;
+                const float y = b1 + (j + startY) * stepY;
+                const int index = i * blockWidth + j;
                 rk[i * blockWidth + j] =
-                    laplaceDiffScheme(grid, i, j, n, stepX, stepY, stepXCoeff, stepYCoeff, a1, b1, startX, startY) -
-                    F(a1 + (i + startX) * stepX, b1 + (j + startY) * stepY);
+                    laplaceDiffScheme(grid, x, y, index, stepX, stepY, stepXCoeff, stepYCoeff) -
+                    F(x, y);
                 printf("Values: %f\n", rk[i * blockWidth + j]);
             }
         }
