@@ -25,19 +25,19 @@ float F(float x, float y) {
     return u(x, y) * ((x + y) * (x + y + 2) - (4 + x) * (-4 + 8 * (x + y) * (x + y)));
 }
 
-// Grid steps
-float xi(const int a1, const int localIndex, const int processOffset, const int stepX) {
-    // printf("wtf: %f\n", a1 + (localIndex + processOffset) * stepX);
-    // printf("wtf: %f\n", a1);
-    // printf("wtf: %f\n", localIndex);
-    // printf("wtf: %f\n", processOffset);
-    // printf("wtf: %f\n", stepX);
-    return a1 + (localIndex + processOffset) * stepX;
-}
+// // Grid steps
+// float xi(const int a1, const int localIndex, const int processOffset, const int stepX) {
+//     // printf("wtf: %f\n", a1 + (localIndex + processOffset) * stepX);
+//     // printf("wtf: %f\n", a1);
+//     // printf("wtf: %f\n", localIndex);
+//     // printf("wtf: %f\n", processOffset);
+//     // printf("wtf: %f\n", stepX);
+//     return a1 + (localIndex + processOffset) * stepX;
+// }
 
-float yj(const int b1, const int localIndex, const int processOffset, const int stepY) {
-    return b1 + (localIndex + processOffset) * stepY;
-}
+// float yj(const int b1, const int localIndex, const int processOffset, const int stepY) {
+//     return b1 + (localIndex + processOffset) * stepY;
+// }
 
 // // Grid elements
 // float getGridElement(float* grid, const int i, const int j, const int n) {
@@ -85,8 +85,8 @@ float yj(const int b1, const int localIndex, const int processOffset, const int 
 // Laplace difference scheme
 float laplaceDiffScheme(float* grid, const int i, const int j, const int blockWidth, const int stepX, const int stepY,
                         const int stepXCoeff, const int stepYCoeff, const int a1, const int b1, const float startX, const float startY) {
-    const float x = xi(a1, i, startX, stepX);
-    const float y = yj(b1, j, startY, stepY);
+    const float x = a1 + (i + startX) * stepX;
+    const float y = b1 + (j + startY) * stepY;
     const int index = i * blockWidth + j;
     return -(stepXCoeff * (k(x + 0.5 * stepX) * (grid[index + blockWidth] - grid[index]) -
         k(x - 0.5 * stepX) * (grid[index] - grid[index - blockWidth])) +
@@ -413,13 +413,8 @@ int main(int argc, char **argv) {
 	// #pragma omp parallel for schedule (static)
 	for (i = 1; i < blockHeight - 1; i++) {
 		for (j = 1; j < blockWidth - 1; j++) {
-			realValues[i * blockWidth + j] = u(xi(a1, i, startX, stepX), yj(b1, j, startY, stepY));
+			realValues[i * blockWidth + j] = u(a1 + (i + startX) * stepX, b1 + (j + startY) * stepY);
             printf("Real value: %f\n", realValues[i * blockWidth + j]);
-            printf("i: %d\n", i);
-            printf("j: %d\n", j);
-            printf("a1: %f\n", a1);
-            printf("X: %f\n", a1 + (i + startX) * stepX);
-            printf("Y: %f\n", b1 + (j + startY) * stepY);
 		}
 	}
 
@@ -427,28 +422,28 @@ int main(int argc, char **argv) {
 	if (startX == 0) {
         #pragma omp parallel for schedule (static)
 		for (j = 0; j < blockWidth; j++) {
-			grid[j] = u(xi(a1, 0, startX, stepX), yj(b1, j, startY, stepY));
+			grid[j] = u(a1 + startX * stepX, b1 + (j + startY) * stepY);
 		}
 	}
 
 	if (endX == n) {
         #pragma omp parallel for schedule (static)
 		for (j = 0; j < blockWidth; j++) {
-            grid[(blockHeight - 1) * blockWidth + j] = u(xi(a1, blockHeight - 1, startX, stepX), yj(b1, j, startY, stepY));
+            grid[(blockHeight - 1) * blockWidth + j] = u(a1 + (blockHeight - 1 + startX) * stepX, b1 + (j + startY) * stepY);
 		}
 	}
 
 	if (startY == 0) {
         #pragma omp parallel for schedule (static)
 		for (i = 0; i < blockHeight; i++) {
-            grid[i * blockWidth] = u(xi(a1, i, startX, stepX), yj(b1, 0, startY, stepY));
+            grid[i * blockWidth] = u(a1 + (i + startX) * stepX, b1 + startY * stepY);
 		}
 	}
 
 	if (endY == n) {
         #pragma omp parallel for schedule (static)
 		for (i = 0; i < blockHeight; i++) {
-            grid[i * blockWidth + (blockWidth - 1)] = u(xi(a1, i, startX, stepX), yj(b1, blockWidth - 1, startY, stepY));
+            grid[i * blockWidth + (blockWidth - 1)] = u(a1 + (i + startX) * stepX, b1 + (blockWidth - 1 + startY) * stepY);
 		}
     }
 
@@ -467,7 +462,7 @@ int main(int argc, char **argv) {
             for (j = 1; j < blockWidth - 1; j++) {
                 rk[i * blockWidth + j] =
                     laplaceDiffScheme(grid, i, j, n, stepX, stepY, stepXCoeff, stepYCoeff, a1, b1, startX, startY) -
-                    F(xi(a1, i, startX, stepX), yj(b1, j, startY, stepY));
+                    F(a1 + (i + startX) * stepX, b1 + (j + startY) * stepY);
             }
         }
 
