@@ -462,8 +462,6 @@ int main(int argc, char **argv) {
                 const int index = i * blockWidth + j;
                 rk[i * blockWidth + j] =
                     laplaceDiffScheme(grid, x, y, index, stepX, stepY, stepXCoeff, stepYCoeff, blockWidth) - F(x, y);
-                printf("Values: %f\n", rk[i * blockWidth + j]);
-                printf("Values F: %f\n", F(x, y));
             }
         }
 
@@ -478,6 +476,7 @@ int main(int argc, char **argv) {
                 const float y = b1 + (j + startY) * stepY;
                 const int index = i * blockWidth + j;
                 ark[index] = laplaceDiffScheme(rk, x, y, index, stepX, stepY, stepXCoeff, stepYCoeff, blockWidth);
+                printf("Values: %f\n", ark[index]);
             }
         }
 
