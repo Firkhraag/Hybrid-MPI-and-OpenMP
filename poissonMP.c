@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <omp.h>
+#include <unistd.h>
+#include <sys/time.h>
 // #include <mpi.h>
 
 // Rectangle
@@ -14,14 +16,8 @@
 #define B_DIFF 4.0
 
 // Grid
-#define M1 20
-#define N1 20
-#define M2 40
-#define N2 40
-#define M3 80
-#define N3 80
-#define M4 160
-#define N4 160
+#define M1 80
+#define N1 80
 
 // Epsilon
 #define EPS 0.001
@@ -287,9 +283,12 @@ double* iterativeMethod(int m, int n, double stepX, double stepY) {
 
 int main() {
 
-    FILE *f = fopen("result1.txt", "w");
-    if (f == NULL)
-    {
+    struct timeval start, end;
+
+    gettimeofday(&start, NULL);
+
+    FILE *f = fopen("error80.txt", "w");
+    if (f == NULL) {
         printf("Error opening file!\n");
         exit(1);
     }
@@ -300,44 +299,19 @@ int main() {
     double stepY1 = h2(N1);
 
     double* res = iterativeMethod(M1, N1, stepX1, stepY1);
+
+    double error = 0;
+    #pragma omp parallel for schedule (static) reduction(+:error)
     for (int i = 1; i < M1; i++) {
         for (int j = 1; j < N1; j++) {
-            fprintf(f, "Original function: %f, Approximated result: %f\n", u1(xi(i, stepX1), yj(j, stepY1)), res[(N1 - 1)*(i - 1) + (j - 1)]);
+            error += (u1(xi(i, stepX1), yj(j, stepY1)) - res[(N1 - 1)*(i - 1) + (j - 1)]) * (u1(xi(i, stepX1), yj(j, stepY1)) - res[(N1 - 1)*(i - 1) + (j - 1)]);
         }
     }
-
-    double stepX2 = h1(M2);
-    double stepY2 = h2(N2);
-
-    // double* res = iterativeMethod(M2, N2, stepX2, stepY2);
-    // for (int i = 1; i < M2; i++) {
-    //     for (int j = 1; j < N2; j++) {
-    //         fprintf(f, "Original function: %f, Approximated result: %f\n", u1(xi(i, stepX2), yj(j, stepY2)), res[(N2 - 1)*(i - 1) + (j - 1)]);
-    //     }
-    // }
-
-    double stepX3 = h1(M3);
-    double stepY3 = h2(N3);
-
-    // double* res = iterativeMethod(M3, N3, stepX3, stepY3);
-    // for (int i = 1; i < M3; i++) {
-    //     for (int j = 1; j < N3; j++) {
-    //         fprintf(f, "Original function: %f, Approximated result: %f\n", u1(xi(i, stepX3), yj(j, stepY3)), res[(N3 - 1)*(i - 1) + (j - 1)]);
-    //     }
-    // }
-
-    double stepX4 = h1(M4);
-    double stepY4 = h2(N4);
-
-    // #pragma omp
-    // printf("Number of threads: %d\n", omp_get_num_threads());
-
-    // double* res = iterativeMethod(M4, N4, stepX4, stepY4);
-    // for (int i = 1; i < M4; i++) {
-    //     for (int j = 1; j < N4; j++) {
-    //         fprintf(f, "Original function: %f, Approximated result: %f\n", u1(xi(i, stepX4), yj(j, stepY4)), res[(N4 - 1)*(i - 1) + (j - 1)]);
-    //     }
-    // }
+    gettimeofday(&end, NULL);
+    double time_taken = end.tv_sec + end.tv_usec / 1e6 -
+                        start.tv_sec - start.tv_usec / 1e6; // in seconds
+    fprintf(f, "Error: %f\n", error);
+    fprintf(f, "Execution time: %f\n", time_taken);
 
     free(res);
     fclose(f);
