@@ -85,7 +85,7 @@ float F(float x, float y) {
 // Laplace difference scheme
 float laplaceDiffScheme(float* grid, const float x, const float y, const int index, const int stepX, const int stepY,
                         const int stepXCoeff, const int stepYCoeff) {
-                            
+
     return -(stepXCoeff * (k(x + 0.5 * stepX) * (grid[index + blockWidth] - grid[index]) -
         k(x - 0.5 * stepX) * (grid[index] - grid[index - blockWidth])) +
         stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) - (grid[index] - grid[index - 1]))) +
@@ -464,6 +464,7 @@ int main(int argc, char **argv) {
                     laplaceDiffScheme(grid, x, y, index, stepX, stepY, stepXCoeff, stepYCoeff) -
                     F(x, y);
                 printf("Values: %f\n", rk[i * blockWidth + j]);
+                printf("Values F: %f\n", F(x, y));
             }
         }
 
