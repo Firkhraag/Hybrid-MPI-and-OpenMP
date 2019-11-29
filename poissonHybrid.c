@@ -466,7 +466,7 @@ int main(int argc, char **argv) {
         }
 
         // Pass residuals to adjacent processes
-        passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
+        // passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
 
         // Find A * rk
         #pragma omp parallel for schedule (static)
