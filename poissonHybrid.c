@@ -27,11 +27,11 @@ float F(float x, float y) {
 
 // Grid steps
 float xi(const int a1, const int localIndex, const int processOffset, const int stepX) {
-    printf("wtf: %f\n", a1 + (localIndex + processOffset) * stepX);
-    printf("wtf: %f\n", a1);
-    printf("wtf: %f\n", localIndex);
-    printf("wtf: %f\n", processOffset);
-    printf("wtf: %f\n", stepX);
+    // printf("wtf: %f\n", a1 + (localIndex + processOffset) * stepX);
+    // printf("wtf: %f\n", a1);
+    // printf("wtf: %f\n", localIndex);
+    // printf("wtf: %f\n", processOffset);
+    // printf("wtf: %f\n", stepX);
     return a1 + (localIndex + processOffset) * stepX;
 }
 
@@ -385,6 +385,7 @@ int main(int argc, char **argv) {
     printf("StartY: %d\n", startY);
     printf("EndY: %d\n", endY);
     printf("BlockHeight: %d\n", blockHeight);
+    printf("wtf: %f\n", a1);
     printf("------\n");
 
     // Local grid approximation
@@ -414,11 +415,11 @@ int main(int argc, char **argv) {
 	for (i = 1; i < blockHeight - 1; i++) {
 		for (j = 1; j < blockWidth - 1; j++) {
 			realValues[i * blockWidth + j] = u(xi(a1, i, startX, stepX), yj(b1, j, startY, stepY));
-            printf("Real value: %f\n", realValues[i * blockWidth + j]);
-            printf("i: %d\n", i);
-            printf("j: %d\n", j);
-            printf("X: %f\n", xi(a1, i, startX, stepX));
-            printf("Y: %f\n", yj(b1, j, startY, stepY));
+            // printf("Real value: %f\n", realValues[i * blockWidth + j]);
+            // printf("i: %d\n", i);
+            // printf("j: %d\n", j);
+            // printf("X: %f\n", xi(a1, i, startX, stepX));
+            // printf("Y: %f\n", yj(b1, j, startY, stepY));
 		}
 	}
 
