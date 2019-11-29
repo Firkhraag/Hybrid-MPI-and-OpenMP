@@ -310,7 +310,7 @@ int main(int argc, char **argv) {
     const float eps = 1e-3;
 
     // Square grid
-    const int n = 40;
+    const int n = 10;
     // From 0 to n
     // const int dim = (n + 1) * (n + 1);
 
@@ -380,6 +380,7 @@ int main(int argc, char **argv) {
     printf("StartY: %d\n", startY);
     printf("EndY: %d\n", endY);
     printf("BlockHeight: %d\n", blockHeight);
+    printf("------\n");
 
     // Local grid approximation
     float* grid = (float*)malloc(blockWidth * blockHeight * sizeof(float));
@@ -408,6 +409,7 @@ int main(int argc, char **argv) {
 	for (i = 1; i < blockHeight - 1; i++) {
 		for (j = 1; j < blockWidth - 1; j++) {
 			realValues[i * blockWidth + j] = u(xi(a1, i, startX, stepX), yj(b1, j, startY, stepY));
+            printf("Real value: %f\n", realValues[i * blockWidth + j]);
 		}
 	}
 
