@@ -475,8 +475,10 @@ int main(int argc, char **argv) {
         #pragma omp parallel for schedule (static)
         for (i = 1; i < blockHeight - 1; i++) {
             for (j = 1; j < blockWidth - 1; j++) {
-                ark[i * blockWidth + j] =
-                    laplaceDiffScheme(rk, i, j, n, stepX, stepY, stepXCoeff, stepYCoeff, a1, b1, startX, startY);
+                const float x = a1 + (i + startX) * stepX;
+                const float y = b1 + (j + startY) * stepY;
+                const int index = i * blockWidth + j;
+                ark[index] = laplaceDiffScheme(rk, x, y, index, stepX, stepY, stepXCoeff, stepYCoeff);
             }
         }
 
