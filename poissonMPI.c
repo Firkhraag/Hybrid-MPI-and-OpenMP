@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
     const float eps = 1e-5;
 
     // Square grid
-    const int n = 20;
+    const int n = 5;
 
     // Step
     const float stepX = (a2 - a1) / n;
@@ -429,12 +429,13 @@ int main(int argc, char **argv) {
             fprintf(f, "Step: %d. Error: %f\n", step, globalError);
         }
 
+        break;
+
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
 
         // Wait for all processes to complete the step
         // MPI_Barrier(MPI_COMM_WORLD);
 
-        break;
 
     } while (stopCondition > eps);
 
