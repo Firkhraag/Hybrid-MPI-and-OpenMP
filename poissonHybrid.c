@@ -367,7 +367,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-    FILE *f = fopen("poisson40Test.txt", "w");
+    FILE *f = fopen("test.txt", "w");
     if (f == NULL) {
         printf("Error opening file!\n");
         exit(1);
