@@ -195,6 +195,7 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
+                printf("Found: %f\n", rk[index]);
             }
         }
 
@@ -219,7 +220,6 @@ int main(int argc, char **argv) {
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
 
         tau = tau1 / tau2;
-        printf("Found tau: %f\n", tau);
 
         // Find new approximation
         #pragma omp parallel for
@@ -239,7 +239,6 @@ int main(int argc, char **argv) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const int index = i * blockWidth + j;
                 error += (realValues[index] - grid[index]) * (realValues[index] - grid[index]);
-                printf("Real: %f\n", realValues[index]);
             }
         }
 
