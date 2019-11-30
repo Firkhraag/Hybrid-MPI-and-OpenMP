@@ -78,7 +78,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
 // }
 
 // For each block
-void passInformationBetweenProcesses(const int currentRank, const int numOfBlocksX, const int numOfBlocksY, const int blockPositionX, const int blockPositionY, float* grid,
+void passInformationBetweenProcesses(const int numOfBlocksX, const int numOfBlocksY, const int blockPositionX, const int blockPositionY, float* grid,
                                     const int blockWidth, const int blockHeight) {
 
     bool up = true;
@@ -412,7 +412,7 @@ int main(int argc, char **argv) {
         }
 
         // Pass residuals to adjacent processes
-        passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
+        passInformationBetweenProcesses(numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
 
         // Find A * rk using difference scheme
         #pragma omp parallel for

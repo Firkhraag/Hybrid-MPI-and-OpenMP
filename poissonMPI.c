@@ -50,10 +50,12 @@ void passInformationBetweenProcesses(const int numOfBlocksX, const int numOfBloc
 
     bool up = true;
     if (blockPositionX == 0) {
+        printf("up false\n");
         up = false;
     }
     bool bottom = true;
     if (blockPositionX == numOfBlocksX - 1) {
+        printf("bottom false\n");
         bottom = false;
     }
     bool left = true;
@@ -92,6 +94,9 @@ void passInformationBetweenProcesses(const int numOfBlocksX, const int numOfBloc
     const int bottomNeighborRank = numOfBlocksY * (blockPositionX + 1) + blockPositionY;
     const int leftNeighborRank = numOfBlocksY * blockPositionX + (blockPositionY - 1);
     const int rightNeighborRank = numOfBlocksY * blockPositionX + (blockPositionY + 1);
+
+    printf("up: %d\n", upperNeighborRank);
+    printf("bottom: %d\n", bottomNeighborRank);
 
     MPI_Status status;
     MPI_Request leftSendRequest, rightSendRequest, upSendRequest, bottomSendRequest;
@@ -353,6 +358,7 @@ int main(int argc, char **argv) {
             }
         }
 
+        printf("cur: %d\n", currentRank);
         // Pass residuals to adjacent processes
         passInformationBetweenProcesses(numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
 
