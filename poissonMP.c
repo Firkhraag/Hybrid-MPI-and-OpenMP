@@ -233,6 +233,8 @@ int main(int argc, char **argv) {
                     q(x, y) * rk[index];
                 printf("i: %d\n", i);
                 printf("j: %d\n", j);
+                printf("x: %f\n", x);
+                printf("y: %f\n", y);
                 printf("ark[index]: %f\n", ark[index]);
             }
         }
@@ -241,12 +243,12 @@ int main(int argc, char **argv) {
 
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
-        printf("tau1: %f\n", tau1);
+        printf("\ntau1: %f\n", tau1);
         break;
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
 
         
-        printf("\ntau2: %f\n", tau2);
+        printf("tau2: %f\n", tau2);
 
         tau = tau1 / tau2;
         // printf("tau: %f\n", tau);

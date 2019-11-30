@@ -380,7 +380,7 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                printf("i: %d\nj: %d\nark[index]: %f\n", i + startX, j + startY, ark[index]);
+                printf("i: %d\nj: %d\nx: %f\ny: %f\nark[index]: %f\n", i + startX, j + startY, x, y, ark[index]);
             }
         }
 
