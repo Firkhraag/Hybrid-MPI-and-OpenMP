@@ -29,7 +29,7 @@ float F(float x, float y) {
 // Dot product
 float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, float stepX, float stepY) {
     float result = 0;
-    #pragma omp parallel for reduction(+:result)
+    // #pragma omp parallel for reduction(+:result)
     for (int i = 1; i < blockHeight - 1; i++) {
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
