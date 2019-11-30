@@ -45,17 +45,15 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
 }
 
 // For each block
-void passInformationBetweenProcesses(const int numOfBlocksX, const int numOfBlocksY, const int blockPositionX, const int blockPositionY, float* grid,
+void passInformationBetweenProcesses(const int currentRank, const int numOfBlocksX, const int numOfBlocksY, const int blockPositionX, const int blockPositionY, float* grid,
                                     const int blockWidth, const int blockHeight) {
 
     bool up = true;
     if (blockPositionX == 0) {
-        printf("up false\n");
         up = false;
     }
     bool bottom = true;
     if (blockPositionX == numOfBlocksX - 1) {
-        printf("bottom false\n");
         bottom = false;
     }
     bool left = true;
@@ -95,8 +93,12 @@ void passInformationBetweenProcesses(const int numOfBlocksX, const int numOfBloc
     const int leftNeighborRank = numOfBlocksY * blockPositionX + (blockPositionY - 1);
     const int rightNeighborRank = numOfBlocksY * blockPositionX + (blockPositionY + 1);
 
-    printf("up: %d\n", upperNeighborRank);
-    printf("bottom: %d\n", bottomNeighborRank);
+    if (currentRank == 1) {
+        printf("upR: %d\n", upperNeighborRank);
+        printf("bottomR: %d\n", bottomNeighborRank);
+        printf("up: %d\n", up);
+        printf("bottom: %d\n", bottom);
+    }
 
     MPI_Status status;
     MPI_Request leftSendRequest, rightSendRequest, upSendRequest, bottomSendRequest;
@@ -153,7 +155,7 @@ void passInformationBetweenProcesses(const int numOfBlocksX, const int numOfBloc
     }
     if (left == true) {
         float* receiveLeft = (float*)malloc(height * sizeof(float));
-        MPI_Recv(receiveLeft, height, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(receiveLeft, height, MPI_FLOAT, leftNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         for (i = 0; i < height; i++) {
             grid[(i + 1) * blockWidth] = receiveLeft[i];
         }
@@ -161,7 +163,7 @@ void passInformationBetweenProcesses(const int numOfBlocksX, const int numOfBloc
     }
     if (right == true) {
         float* receiveRight = (float*)malloc(height * sizeof(float));
-        MPI_Recv(receiveRight, height, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(receiveRight, height, MPI_FLOAT, rightNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         for (i = 0; i < height; i++) {
             grid[(i + 1) * blockWidth + (width + 1)] = receiveRight[i];
         }
@@ -246,22 +248,22 @@ int main(int argc, char **argv) {
 	const int blockHeight = endX - startX + 1;
 	const int blockWidth = endY - startY + 1;
 
-    printf("------\n");
-    printf("Size: %d\n", size);
-    printf("Rank: %d\n", currentRank);
-    printf("NumOfBlocksY: %d\n", numOfBlocksY);
-    printf("NumOfBlocksX: %d\n", numOfBlocksX);
-    printf("BlockPositionX: %d\n", blockPositionX);
-    printf("BlockPositionY: %d\n", blockPositionY);
-    printf("BlockSizeX: %d\n", blockSizeX);
-    printf("BlockSizeY: %d\n", blockSizeY);
-    printf("StartX: %d\n", startX);
-    printf("EndX: %d\n", endX);
-    printf("StartY: %d\n", startY);
-    printf("EndY: %d\n", endY);
-    printf("BlockHeight: %d\n", blockHeight);
-    printf("BlockWidth: %d\n", blockWidth);
-    printf("------\n");
+    // printf("------\n");
+    // printf("Size: %d\n", size);
+    // printf("Rank: %d\n", currentRank);
+    // printf("NumOfBlocksY: %d\n", numOfBlocksY);
+    // printf("NumOfBlocksX: %d\n", numOfBlocksX);
+    // printf("BlockPositionX: %d\n", blockPositionX);
+    // printf("BlockPositionY: %d\n", blockPositionY);
+    // printf("BlockSizeX: %d\n", blockSizeX);
+    // printf("BlockSizeY: %d\n", blockSizeY);
+    // printf("StartX: %d\n", startX);
+    // printf("EndX: %d\n", endX);
+    // printf("StartY: %d\n", startY);
+    // printf("EndY: %d\n", endY);
+    // printf("BlockHeight: %d\n", blockHeight);
+    // printf("BlockWidth: %d\n", blockWidth);
+    // printf("------\n");
 
     // Local grid approximation array
     float* grid = (float*)malloc(blockWidth * blockHeight * sizeof(float));
@@ -360,7 +362,7 @@ int main(int argc, char **argv) {
 
         printf("cur: %d\n", currentRank);
         // Pass residuals to adjacent processes
-        passInformationBetweenProcesses(numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
+        passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
 
         // Find A * rk using difference scheme
         for (int i = 1; i < blockHeight - 1; i++) {

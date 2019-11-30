@@ -193,7 +193,7 @@ void passInformationBetweenProcesses(const int numOfBlocksX, const int numOfBloc
         #pragma omp section
         if (left) {
             float* receiveLeft = (float*)malloc(height * sizeof(float));
-            MPI_Recv(receiveLeft, height, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(receiveLeft, height, MPI_FLOAT, leftNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             for (i = 0; i < height; i++) {
                 grid[(i + 1) * blockWidth] = receiveLeft[i];
             }
@@ -202,7 +202,7 @@ void passInformationBetweenProcesses(const int numOfBlocksX, const int numOfBloc
         #pragma omp section
         if (right) {
             float* receiveRight = (float*)malloc(height * sizeof(float));
-            MPI_Recv(receiveRight, height, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(receiveRight, height, MPI_FLOAT, rightNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             for (i = 0; i < height; i++) {
                 grid[(i + 1) * blockWidth + (width + 1)] = receiveRight[i];
             }
