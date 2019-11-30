@@ -384,10 +384,6 @@ int main(int argc, char **argv) {
 
         tau = tau1 / tau2;
 
-        if (currentRank == 0) {
-            printf("tau: %f\n", tau);
-        }
-
         // Find new approximation
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
@@ -417,6 +413,10 @@ int main(int argc, char **argv) {
         }
 
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
+
+        if (currentRank == 0) {
+            printf("stop: %f\n", stopCondition);
+        }
 
         // Wait for all processes to complete the step
         // MPI_Barrier(MPI_COMM_WORLD);

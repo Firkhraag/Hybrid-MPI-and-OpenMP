@@ -460,7 +460,7 @@ int main(int argc, char **argv) {
         float globalError = 0;
         // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
         MPI_Reduce(&error, &globalError, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-        MPI_Barrier(MPI_COMM_WORLD);
+        // MPI_Barrier(MPI_COMM_WORLD);
 
         if (currentRank == 0) {
             fprintf(f, "Step: %d. Error: %f\n", step, globalError);
@@ -469,7 +469,7 @@ int main(int argc, char **argv) {
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
 
         // Wait for all processes to complete the step
-        MPI_Barrier(MPI_COMM_WORLD);
+        //MPI_Barrier(MPI_COMM_WORLD);
 
         // break;
 
