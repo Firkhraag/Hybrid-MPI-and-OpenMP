@@ -35,9 +35,36 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
             printf("i: %d\nj: %d\nresult: %f\n", i, j, grid1[index] * grid2[index]);
         }
     }
-    // result *= stepX * stepY;
-    return result;
+
+    float sum;
+    // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
+    MPI_Reduce(&result, &sum, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+    // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
+    MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    return stepX * stepY * sum;
 }
+
+// float dotProductMPI(float var, const int currentRank, const int size) {
+//     float* sums;
+//     if (currentRank == 0){
+//         float* sums = (float*)malloc(size * sizeof(float));
+//     }
+
+//     // Gather to root: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm
+//     MPI_Gather(&var, 1, MPI_FLOAT, sums, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+
+//     float sum = 0;
+//     if (currentRank == 0) {
+//         // Sum all sums
+//         #pragma omp parallel for schedule (static) reduction(+:sum)
+//         for (int i = 0; i < size; i++)
+//             sum += sums[i];
+//         free(sums);
+//     }
+
+//     MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+//     return sum;
+// }
 
 // For each block
 void passInformationBetweenProcesses(const int currentRank, const int numOfBlocksX, const int numOfBlocksY, const int blockPositionX, const int blockPositionY, float* grid,
@@ -364,20 +391,6 @@ int main(int argc, char **argv) {
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
-
-        float tau1Global;
-        // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
-        MPI_Reduce(&tau1, &tau1Global, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-        // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
-        MPI_Bcast(&tau1Global, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-        tau1Global *= stepX * stepY;
-
-        float tau2Global;
-        // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
-        MPI_Reduce(&tau2, &tau2Global, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-        // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
-        MPI_Bcast(&tau2Global, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-        tau2Global *= stepX * stepY;
 
         if (currentRank == 0) {
             printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
