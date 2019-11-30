@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
     do {
         step++;
         // Find residual using difference scheme
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
@@ -195,11 +195,14 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
+                printf("Found: %f\n", rk[index]);
             }
         }
 
+        printf("--------------\n");
+
         // Find A * rk using difference scheme
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
@@ -245,7 +248,8 @@ int main(int argc, char **argv) {
         fprintf(f, "Step: %d. Error: %f\n", step, error);
 
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
-        printf("Stop: %f", stopCondition);
+        break;
+        printf("Stop: %f\n", stopCondition);
     } while (stopCondition > eps);
 
     free(gridDiff);
