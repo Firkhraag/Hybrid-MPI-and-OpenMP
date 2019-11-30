@@ -45,25 +45,26 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
     // return sum;
 }
 
-float processDot(float var, const int rank, const int size) const{
-      float *processes_sum;
-      if (rank == 0){
-          processes_sum = new float[size];
-      }
+float dotProductMPI(float var, const int currentRank, const int size) {
+    float* sums;
+    if (currentRank == 0){
+        float* sums = (float*)malloc(size * sizeof(float));
+    }
 
-      MPI_Gather(&var, 1, MPI_FLOAT, processes_sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    // Gather to root: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm
+    MPI_Gather(&var, 1, MPI_FLOAT, sums, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-      float sum = 0.0f;
-      if (rank == 0) {
-          #pragma omp parallel
-          #pragma omp for schedule (static) reduction(+:sum)
-          for (int i = 0; i < size; i++)
-              sum += processes_sum[i];
-          delete [] processes_sum;
-      }
+    float sum = 0;
+    if (currentRank == 0) {
+        // Sum all sums
+        #pragma omp parallel for schedule (static) reduction(+:sum)
+        for (int i = 0; i < size; i++)
+            sum += sums[i];
+        free(sums);
+    }
 
-      MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-      return sum;
+    MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    return sum;
 }
 
 // For each block
@@ -409,8 +410,8 @@ int main(int argc, char **argv) {
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
 
-	    tau1 = processDot(tau1, currentRank, size);
-	    tau2 = processDot(tau2, currentRank, size);
+	    tau1 = dotProductMPI(tau1, currentRank, size);
+	    tau2 = dotProductMPI(tau2, currentRank, size);
 
         if (currentRank == 0) {
             printf("tau1: %f\n", tau1);
