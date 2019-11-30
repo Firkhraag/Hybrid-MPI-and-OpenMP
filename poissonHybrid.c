@@ -94,7 +94,7 @@ void passInformationBetweenProcesses(const int numOfBlocksX, const int numOfBloc
         left = false;
     }
     bool right = true;
-    if (blockPositionX == numOfBlocksY - 1) {
+    if (blockPositionY == numOfBlocksY - 1) {
         right = false;
     }
 
