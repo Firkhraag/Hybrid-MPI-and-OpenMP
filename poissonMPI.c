@@ -26,13 +26,13 @@ float F(float x, float y) {
 }
 
 // Dot product
-float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, float stepX, float stepY) {
+float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, float stepX, float stepY, int startX, int startY) {
     float result = 0;
     for (int i = 1; i < blockHeight - 1; i++) {
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
-            result += stepX * stepY * grid1[index] * grid2[index];
-            printf("i: %d\nj: %d\nresult: %f\n", i, j, grid1[index] * grid2[index]);
+            result += grid1[index] * grid2[index];
+            printf("i: %d\nj: %d\nresult: %f\n", i + startX, j + startY, grid1[index] * grid2[index]);
         }
     }
 
@@ -41,7 +41,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
     MPI_Reduce(&result, &sum, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
     // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
     MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    return  sum;
+    return stepX * stepY * sum;
 }
 
 // float dotProductMPI(float var, const int currentRank, const int size) {
@@ -389,8 +389,8 @@ int main(int argc, char **argv) {
         }
 
         // Find tau
-        float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
-        float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
+        float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY, startX, startY);
+        float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY, startX, startY);
 
         if (currentRank == 0) {
             printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
@@ -428,7 +428,7 @@ int main(int argc, char **argv) {
 
         break;
 
-        stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
+        stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY, startX, startY));
 
         // Wait for all processes to complete the step
         // MPI_Barrier(MPI_COMM_WORLD);
