@@ -469,7 +469,7 @@ int main(int argc, char **argv) {
         // Wait for all processes to complete the step
         MPI_Barrier(MPI_COMM_WORLD);
 
-        break;
+        // break;
 
     } while (stopCondition > eps);
 
