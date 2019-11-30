@@ -26,17 +26,16 @@ float F(float x, float y) {
 }
 
 // Dot product
-float dotProduct(const int currentRank, float* grid1, float* grid2, const int blockWidth, const int blockHeight, const float stepX, const float stepY) {
+float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, float stepX, float stepY) {
     float result = 0;
     for (int i = 1; i < blockHeight - 1; i++) {
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
             result += grid1[index] * grid2[index];
-            if (currentRank == 0) {
-                printf("i: %d\n", i);
-                printf("j: %d\n", j);
-                printf("value: %f\n", grid1[index] * grid2[index]);
-            }
+            printf("i: %d\n", i);
+            printf("j: %d\n", j);
+            printf("result: %f\n", result);
+        }
     }
     result *= stepX * stepY;
     return result;
@@ -380,8 +379,8 @@ int main(int argc, char **argv) {
         }
 
         // Find tau
-        float tau1 = dotProduct(currentRank, ark, rk, blockWidth, blockHeight, stepX, stepY);
-        float tau2 = dotProduct(currentRank, ark, ark, blockWidth, blockHeight, stepX, stepY);
+        float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
+        float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
 
         float tau1Global;
         // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
@@ -394,8 +393,6 @@ int main(int argc, char **argv) {
         MPI_Reduce(&tau2, &tau2Global, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
         MPI_Bcast(&tau2Global, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-
-        
 
         // if (currentRank == 0) {
         //     printf("tau1: %f\n", tau1);
@@ -432,7 +429,7 @@ int main(int argc, char **argv) {
             fprintf(f, "Step: %d. Error: %f\n", step, globalError);
         }
 
-        stopCondition = sqrt(dotProduct(currentRank, gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
+        stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
 
         // Wait for all processes to complete the step
         // MPI_Barrier(MPI_COMM_WORLD);
