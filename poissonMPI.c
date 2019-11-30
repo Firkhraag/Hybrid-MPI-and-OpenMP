@@ -356,6 +356,11 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
+                if (currentRank == 0) {
+                    printf("i: %d\n", i);
+                    printf("j: %d\n", j);
+                    printf("rk[index]: %f\n", rk[index]);
+                }
                 // printf("Value: %f\n", rk[index]);
             }
         }
@@ -382,10 +387,10 @@ int main(int argc, char **argv) {
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
 
-        if (currentRank == 0) {
-            printf("tau1: %f\n", tau1);
-            printf("tau2: %f\n\n", tau2);
-        }
+        // if (currentRank == 0) {
+        //     printf("tau1: %f\n", tau1);
+        //     printf("tau2: %f\n\n", tau2);
+        // }
 
         tau = tau1 / tau2;
 
@@ -424,7 +429,7 @@ int main(int argc, char **argv) {
         // Wait for all processes to complete the step
         // MPI_Barrier(MPI_COMM_WORLD);
 
-        // break;
+        break;
 
     } while (stopCondition > eps);
 
