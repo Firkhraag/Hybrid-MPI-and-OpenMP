@@ -29,7 +29,7 @@ float F(float x, float y) {
 // Dot product
 float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, float stepX, float stepY) {
     float result = 0;
-    #pragma omp parallel for reduction(+:result)
+    #pragma omp parallel for schedule (static) reduction(+:result)
     for (int i = 1; i < blockHeight - 1; i++) {
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
     float stopCondition;
 
     // Find real values in the block
-	#pragma omp parallel for
+	#pragma omp parallel for schedule (static)
 	for (int i = 1; i < blockHeight - 1; i++) {
 		for (int j = 1; j < blockWidth - 1; j++) {
 			realValues[i * blockWidth + j] = u(a1 + (i + startX) * stepX, b1 + (j + startY) * stepY);
@@ -138,35 +138,35 @@ int main(int argc, char **argv) {
 
     // Find global boundary values in the block
 	if (startX == 0) {
-        #pragma omp parallel for
+        #pragma omp parallel for schedule (static)
 		for (int j = 0; j < blockWidth; j++) {
 			grid[j] = u(a1 + startX * stepX, b1 + (j + startY) * stepY);
 		}
 	}
 
 	if (endX == n) {
-        #pragma omp parallel for
+        #pragma omp parallel for schedule (static)
 		for (int j = 0; j < blockWidth; j++) {
             grid[(blockHeight - 1) * blockWidth + j] = u(a1 + (blockHeight - 1 + startX) * stepX, b1 + (j + startY) * stepY);
 		}
 	}
 
 	if (startY == 0) {
-        #pragma omp parallel for
+        #pragma omp parallel for schedule (static)
 		for (int i = 0; i < blockHeight; i++) {
             grid[i * blockWidth] = u(a1 + (i + startX) * stepX, b1 + startY * stepY);
 		}
 	}
 
 	if (endY == n) {
-        #pragma omp parallel for
+        #pragma omp parallel for schedule (static)
 		for (int i = 0; i < blockHeight; i++) {
             grid[i * blockWidth + (blockWidth - 1)] = u(a1 + (i + startX) * stepX, b1 + (blockWidth - 1 + startY) * stepY);
 		}
     }
 
     // Initializing grid with starting values
-    #pragma omp parallel for
+    #pragma omp parallel for schedule (static)
     for (int i = 1; i < blockHeight - 1; i++) {
 		for (int j = 1; j < blockWidth - 1; j++) {
 			grid[i * blockWidth + j] = 0;
@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
     do {
         step++;
         // Find residual using difference scheme
-        #pragma omp parallel for
+        #pragma omp parallel for schedule (static)
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
@@ -199,7 +199,7 @@ int main(int argc, char **argv) {
         }
 
         // Find A * rk using difference scheme
-        #pragma omp parallel for
+        #pragma omp parallel for schedule (static)
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
@@ -221,7 +221,7 @@ int main(int argc, char **argv) {
         tau = tau1 / tau2;
 
         // Find new approximation
-        #pragma omp parallel for
+        #pragma omp parallel for schedule (static)
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const int index = i * blockWidth + j;
@@ -233,7 +233,7 @@ int main(int argc, char **argv) {
 
         // Deviation
         error = 0;
-        #pragma omp parallel for reduction(+:error)
+        #pragma omp parallel for schedule (static) reduction(+:error)
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const int index = i * blockWidth + j;
