@@ -35,7 +35,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
             printf("i: %d\nj: %d\nresult: %f\n", i, j, grid1[index] * grid2[index]);
         }
     }
-    result *= stepX * stepY;
+    // result *= stepX * stepY;
     return result;
 }
 
@@ -370,12 +370,14 @@ int main(int argc, char **argv) {
         MPI_Reduce(&tau1, &tau1Global, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
         MPI_Bcast(&tau1Global, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+        tau1Global *= stepX * stepY;
 
         float tau2Global;
         // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
         MPI_Reduce(&tau2, &tau2Global, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
         MPI_Bcast(&tau2Global, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+        tau2Global *= stepX * stepY;
 
         if (currentRank == 0) {
             printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
