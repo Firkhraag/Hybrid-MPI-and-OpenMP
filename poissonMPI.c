@@ -34,37 +34,29 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
             result += grid1[index] * grid2[index];
         }
     }
-    result = result * stepX * stepY;
+    result *= stepX * stepY;
     return result;
-
-    // float sum;
-    // // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
-    // MPI_Reduce(&result, &sum, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-    // // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
-    // MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    // return sum;
 }
 
-float dotProductMPI(float var, const int currentRank, const int size) {
-    float* sums;
-    if (currentRank == 0){
-        float* sums = (float*)malloc(size * sizeof(float));
-    }
+float processDot(float var, const int rank, const int size) const{
+      float *processes_sum;
+      if (rank == 0){
+          processes_sum = new float[size];
+      }
 
-    // Gather to root: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm
-    MPI_Gather(&var, 1, MPI_FLOAT, sums, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+      MPI_Gather(&var, 1, MPI_FLOAT, processes_sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-    float sum = 0;
-    if (currentRank == 0) {
-        // Sum all sums
-        #pragma omp parallel for schedule (static) reduction(+:sum)
-        for (int i = 0; i < size; i++)
-            sum += sums[i];
-        free(sums);
-    }
+      float sum = 0.0f;
+      if (rank == 0) {
+          #pragma omp parallel
+          #pragma omp for schedule (static) reduction(+:sum)
+          for (int i = 0; i < size; i++)
+              sum += processes_sum[i];
+          delete [] processes_sum;
+      }
 
-    MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    return sum;
+      MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+      return sum;
 }
 
 // For each block
@@ -240,8 +232,6 @@ int main(int argc, char **argv) {
     const float stepXCoeff = 1 / (stepX * stepX);
     const float stepYCoeff = 1 / (stepY * stepY);
 
-    float tau;
-
 	int size;
 	int currentRank;
 
@@ -398,11 +388,11 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                // if (currentRank == 0) {
-                //     printf("i: %d\n", i);
-                //     printf("j: %d\n", j);
-                //     printf("ark[index]: %f\n", ark[index]);
-                // }
+                if (currentRank == 0) {
+                    printf("i: %d\n", i);
+                    printf("j: %d\n", j);
+                    printf("ark[index]: %f\n", ark[index]);
+                }
             }
         }
 
@@ -410,17 +400,24 @@ int main(int argc, char **argv) {
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
 
-	    tau1 = dotProductMPI(tau1, currentRank, size);
-	    tau2 = dotProductMPI(tau2, currentRank, size);
+        float tau1Global;
+        // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
+        MPI_Reduce(&tau1, &tau1Global, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+        // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
+        MPI_Bcast(&tau1Global, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-        if (currentRank == 0) {
-            printf("tau1: %f\n", tau1);
-            printf("tau2: %f\n\n", tau2);
-        }
+        float tau2Global;
+        // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
+        MPI_Reduce(&tau2, &tau2Global, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+        // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
+        MPI_Bcast(&tau2Global, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-        tau = tau1 / tau2;
+        // if (currentRank == 0) {
+        //     printf("tau1: %f\n", tau1);
+        //     printf("tau2: %f\n\n", tau2);
+        // }
 
-
+        float tau = tau1Global / tau2Global;
 
         // Find new approximation
         for (int i = 1; i < blockHeight - 1; i++) {

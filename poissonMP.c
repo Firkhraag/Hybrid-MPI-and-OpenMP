@@ -36,8 +36,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
             result += grid1[index] * grid2[index];
         }
     }
-    result = result * stepX * stepY;
-
+    result *= stepX * stepY;
     return result;
 }
 
