@@ -32,7 +32,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
             result += grid1[index] * grid2[index];
-            printf("i: %d\nj: %d\nresult: %f\n", i + startX, j + startY, grid1[index] * grid2[index]);
+            printf("i: %d\nj: %d\v1: %f\v2: %f\nresult: %f\n", i + startX, j + startY, grid1[index], grid2[index], grid1[index] * grid2[index]);
         }
     }
 
@@ -390,6 +390,10 @@ int main(int argc, char **argv) {
 
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY, startX, startY);
+        if (currentRank == 0) {
+            printf("tau1: %f\n", tau1);
+        }
+        break;
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY, startX, startY);
 
         if (currentRank == 0) {
@@ -425,8 +429,6 @@ int main(int argc, char **argv) {
         if (currentRank == 0) {
             fprintf(f, "Step: %d. Error: %f\n", step, globalError);
         }
-
-        break;
 
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY, startX, startY));
 
