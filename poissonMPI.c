@@ -38,27 +38,6 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
     return result;
 }
 
-float processDot(float var, const int rank, const int size) const{
-      float *processes_sum;
-      if (rank == 0){
-          processes_sum = new float[size];
-      }
-
-      MPI_Gather(&var, 1, MPI_FLOAT, processes_sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-
-      float sum = 0.0f;
-      if (rank == 0) {
-          #pragma omp parallel
-          #pragma omp for schedule (static) reduction(+:sum)
-          for (int i = 0; i < size; i++)
-              sum += processes_sum[i];
-          delete [] processes_sum;
-      }
-
-      MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-      return sum;
-}
-
 // For each block
 void passInformationBetweenProcesses(const int currentRank, const int numOfBlocksX, const int numOfBlocksY, const int blockPositionX, const int blockPositionY, float* grid,
                                     const int blockWidth, const int blockHeight) {
