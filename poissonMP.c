@@ -34,6 +34,9 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
             result += grid1[index] * grid2[index];
+            printf("i: %d\n", i);
+            printf("j: %d\n", j);
+            printf("value: %f\n", grid1[index] * grid2[index]);
         }
     }
     result *= stepX * stepY;

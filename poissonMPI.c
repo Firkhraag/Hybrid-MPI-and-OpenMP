@@ -32,7 +32,11 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
             result += grid1[index] * grid2[index];
-        }
+            if (currentRank == 0) {
+                printf("i: %d\n", i);
+                printf("j: %d\n", j);
+                printf("value: %f\n", grid1[index] * grid2[index]);
+            }
     }
     result *= stepX * stepY;
     return result;
@@ -391,13 +395,7 @@ int main(int argc, char **argv) {
         // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
         MPI_Bcast(&tau2Global, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-        if (currentRank == 0) {
-                     printf("tau1: %f\n", tau1Global);
-        printf("tau2: %f\n", tau2Global);
-                } else {
- printf("tau1: %f\n", tau1Global);
-        printf("tau2: %f\n", tau2Global);
-                }
+        
 
         // if (currentRank == 0) {
         //     printf("tau1: %f\n", tau1);
