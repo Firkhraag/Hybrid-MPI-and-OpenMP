@@ -32,7 +32,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
             result += grid1[index] * grid2[index];
-            printf("i: %d\nj: %d\v1: %f\v2: %f\nresult: %f\n", i + startX, j + startY, grid1[index], grid2[index], grid1[index] * grid2[index]);
+            printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i + startX, j + startY, grid1[index], grid2[index], grid1[index] * grid2[index]);
         }
     }
 
@@ -380,18 +380,18 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                // if (currentRank == 0) {
-                //     printf("i: %d\n", i);
-                //     printf("j: %d\n", j);
-                //     printf("ark[index]: %f\n", ark[index]);
-                // }
+                printf("i: %d\n", i + startX);
+                printf("j: %d\n", j + startY);
+                printf("ark[index]: %f\n", ark[index]);
             }
         }
+
+        printf("********\n\n");
 
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY, startX, startY);
         if (currentRank == 0) {
-            printf("tau1: %f\n", tau1);
+            printf("\ntau1: %f\n", tau1);
         }
         break;
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY, startX, startY);
