@@ -125,34 +125,34 @@ void passInformationBetweenProcesses(const int currentRank, const int numOfBlock
     MPI_Status status;
     MPI_Request leftSendRequest, rightSendRequest, upSendRequest, bottomSendRequest;
 
-    int i;
+    // int i;
     // Sending nodes near boundary to other processes
     if (up == true) {
         sendUp = (float*)malloc(width * sizeof(float));
-        for (i = 0; i < width; i++) {
-            sendUp[i] = grid[blockWidth + (i + 1)];
+        for (int j = 1; j < blockWidth - 1; j++) {
+            sendUp[j - 1] = grid[blockWidth + j];
         }
         // Nonblocking send: buf, count, datatype, destination, tag, communicator, request
         MPI_Isend(sendUp, width, MPI_FLOAT, upperNeighborRank, 0, MPI_COMM_WORLD, &upSendRequest);
 	}
     if (bottom == true) {
         sendBottom = (float*)malloc(width * sizeof(float));
-        for (i = 0; i < width; i++) {
-            sendBottom[i] = grid[height * blockWidth + (i + 1)];
+        for (int j = 1; j < blockWidth - 1; j++) {
+            sendBottom[j - 1] = grid[height * blockWidth + j];
         }
         MPI_Isend(sendBottom, width, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, &bottomSendRequest);
 	}
     if (left == true) {
         sendLeft = (float*)malloc(height * sizeof(float));
-        for (i = 0; i < height; i++) {
-            sendLeft[i] = grid[(i + 1) * blockWidth + 1];
+        for (int i = 1; i < blockHeight - 1; i++) {
+            sendLeft[i - 1] = grid[i * blockWidth + 1];
         }
         MPI_Isend(sendLeft, height, MPI_FLOAT, leftNeighborRank, 0, MPI_COMM_WORLD, &leftSendRequest);
 	}
     if (right == true) {
         sendRight = (float*)malloc(height * sizeof(float));
-        for (i = 0; i < height; i++) {
-            sendRight[i] = grid[(i + 1) * blockWidth + width];
+        for (int i = 1; i < blockHeight - 1; i++) {
+            sendRight[i - 1] = grid[i * blockWidth + width];
         }
         MPI_Isend(sendRight, height, MPI_FLOAT, rightNeighborRank, 0, MPI_COMM_WORLD, &rightSendRequest);
 	}
@@ -162,32 +162,32 @@ void passInformationBetweenProcesses(const int currentRank, const int numOfBlock
         float* receiveUp = (float*)malloc(width * sizeof(float));
         // Blocking receive: buf, count, datatype, source, tag, communicator, status
         MPI_Recv(receiveUp, width, MPI_FLOAT, upperNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        for (i = 0; i < width; i++) {
-            grid[i + 1] = receiveUp[i];
+        for (int j = 1; j < blockWidth - 1; j++) {
+            grid[j] = receiveUp[j - 1];
         }
         free(receiveUp);
     }
     if (bottom == true) {
         float* receiveBottom = (float*)malloc(width * sizeof(float));
         MPI_Recv(receiveBottom, width, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        for (i = 0; i < width; i++) {
-            grid[(height + 1) * blockWidth + (i + 1)] = receiveBottom[i];
+        for (int j = 1; j < blockWidth - 1; j++) {
+            grid[(height + 1) * blockWidth + j] = receiveBottom[j - 1];
         }
         free(receiveBottom);
     }
     if (left == true) {
         float* receiveLeft = (float*)malloc(height * sizeof(float));
         MPI_Recv(receiveLeft, height, MPI_FLOAT, leftNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        for (i = 0; i < height; i++) {
-            grid[(i + 1) * blockWidth] = receiveLeft[i];
+        for (int i = 1; i < blockHeight - 1; i++) {
+            grid[i * blockWidth] = receiveLeft[i - 1];
         }
         free(receiveLeft);
     }
     if (right == true) {
         float* receiveRight = (float*)malloc(height * sizeof(float));
         MPI_Recv(receiveRight, height, MPI_FLOAT, rightNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        for (i = 0; i < height; i++) {
-            grid[(i + 1) * blockWidth + (width + 1)] = receiveRight[i];
+        for (int i = 1; i < blockHeight - 1; i++) {
+            grid[i * blockWidth + (width + 1)] = receiveRight[i - 1];
         }
         free(receiveRight);
     }
