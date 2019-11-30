@@ -237,6 +237,7 @@ int main(int argc, char **argv) {
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
 
         tau = tau1 / tau2;
+        printf("tau: %f\n", tau);
 
         // Find new approximation
         #pragma omp parallel for

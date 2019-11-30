@@ -111,22 +111,12 @@ void passInformationBetweenProcesses(const int currentRank, const int numOfBlock
             sendUp[i] = grid[blockWidth + (i + 1)];
         }
         // Nonblocking send: buf, count, datatype, destination, tag, communicator, request
-        if (currentRank == 1) {
-            printf("1 UP\n");
-        } else {
-            printf("0 UP\n");
-        }
         MPI_Isend(sendUp, width, MPI_FLOAT, upperNeighborRank, 0, MPI_COMM_WORLD, &upSendRequest);
 	}
     if (bottom == true) {
         sendBottom = (float*)malloc(width * sizeof(float));
         for (i = 0; i < width; i++) {
             sendBottom[i] = grid[height * blockWidth + (i + 1)];
-        }
-        if (currentRank == 1) {
-            printf("1 DOWN\n");
-        } else {
-            printf("0 DOWN\n");
         }
         MPI_Isend(sendBottom, width, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, &bottomSendRequest);
 	}
@@ -135,22 +125,12 @@ void passInformationBetweenProcesses(const int currentRank, const int numOfBlock
         for (i = 0; i < height; i++) {
             sendLeft[i] = grid[(i + 1) * blockWidth + 1];
         }
-        if (currentRank == 1) {
-            printf("1 LEFT\n");
-        } else {
-            printf("0 LEFT\n");
-        }
         MPI_Isend(sendLeft, height, MPI_FLOAT, leftNeighborRank, 0, MPI_COMM_WORLD, &leftSendRequest);
 	}
     if (right == true) {
         sendRight = (float*)malloc(height * sizeof(float));
         for (i = 0; i < height; i++) {
             sendRight[i] = grid[(i + 1) * blockWidth + width];
-        }
-        if (currentRank == 1) {
-            printf("1 RIGHT\n");
-        } else {
-            printf("0 RIGHT\n");
         }
         MPI_Isend(sendRight, height, MPI_FLOAT, rightNeighborRank, 0, MPI_COMM_WORLD, &rightSendRequest);
 	}
@@ -403,6 +383,10 @@ int main(int argc, char **argv) {
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
 
         tau = tau1 / tau2;
+
+        if (currentRank == 0) {
+            printf("tau: %f\n", tau);
+        }
 
         // Find new approximation
         for (int i = 1; i < blockHeight - 1; i++) {
