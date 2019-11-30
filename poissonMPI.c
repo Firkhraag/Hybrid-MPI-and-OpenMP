@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <omp.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <mpi.h>
@@ -29,7 +28,6 @@ float F(float x, float y) {
 // Dot product
 float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, float stepX, float stepY) {
     float result = 0;
-    #pragma omp parallel for reduction(+:result)
     for (int i = 1; i < blockHeight - 1; i++) {
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
@@ -45,37 +43,6 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
     MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
     return sum;
 }
-
-// float dotProductMPI(float var, const int currentRank, const int size) {
-//     float* sums;
-//     if (currentRank == 0){
-//         float* sums = (float*)malloc(size * sizeof(float));
-//     }
-
-//     // Gather to root: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm
-//     MPI_Gather(&var, 1, MPI_FLOAT, sums, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-
-//     float sum = 0;
-//     if (currentRank == 0) {
-//         // Sum all sums
-//         #pragma omp parallel for schedule (static) reduction(+:sum)
-//         for (int i = 0; i < size; i++)
-//             sum += sums[i];
-//         free(sums);
-//     }
-
-//     MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-//     return sum;
-// }
-
-// float dotProductMPI(float var, const int currentRank, const int size) {
-//     float sum;
-//     // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
-//     MPI_Reduce(&var, &sum, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-//     // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
-//     MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-//     return sum;
-// }
 
 // For each block
 void passInformationBetweenProcesses(const int currentRank, const int numOfBlocksX, const int numOfBlocksY, const int blockPositionX, const int blockPositionY, float* grid,
@@ -131,83 +98,69 @@ void passInformationBetweenProcesses(const int currentRank, const int numOfBlock
 
     int i;
     // Sending nodes near boundary to other processes
-    #pragma omp parallel sections private(i)
-    {
-        #pragma omp section
-        if (up) {
-            sendUp = (float*)malloc(width * sizeof(float));
-            for (i = 0; i < width; i++) {
-                sendUp[i] = grid[blockWidth + (i + 1)];
-            }
-            // Nonblocking send: buf, count, datatype, destination, tag, communicator, request
-            MPI_Isend(sendUp, width, MPI_FLOAT, upperNeighborRank, 0, MPI_COMM_WORLD, &upSendRequest);
-	    }
-        #pragma omp section
-        if (bottom) {
-            sendBottom = (float*)malloc(width * sizeof(float));
-            for (i = 0; i < width; i++) {
-                sendBottom[i] = grid[height * blockWidth + (i + 1)];
-            }
-            MPI_Isend(sendBottom, width, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, &bottomSendRequest);
-	    }
-        #pragma omp section
-        if (left) {
-            sendLeft = (float*)malloc(height * sizeof(float));
-            for (i = 0; i < height; i++) {
-                sendLeft[i] = grid[(i + 1) * blockWidth + 1];
-            }
-            MPI_Isend(sendLeft, height, MPI_FLOAT, leftNeighborRank, 0, MPI_COMM_WORLD, &leftSendRequest);
-	    }
-        #pragma omp section
-        if (right) {
-            sendRight = (float*)malloc(height * sizeof(float));
-            for (i = 0; i < height; i++) {
-                sendRight[i] = grid[(i + 1) * blockWidth + width];
-            }
-            MPI_Isend(sendRight, height, MPI_FLOAT, rightNeighborRank, 0, MPI_COMM_WORLD, &rightSendRequest);
-	    }
-    }
+    if (up) {
+        sendUp = (float*)malloc(width * sizeof(float));
+        for (i = 0; i < width; i++) {
+            sendUp[i] = grid[blockWidth + (i + 1)];
+        }
+        // Nonblocking send: buf, count, datatype, destination, tag, communicator, request
+        MPI_Isend(sendUp, width, MPI_FLOAT, upperNeighborRank, 0, MPI_COMM_WORLD, &upSendRequest);
+	}
+    if (bottom) {
+        sendBottom = (float*)malloc(width * sizeof(float));
+        for (i = 0; i < width; i++) {
+            sendBottom[i] = grid[height * blockWidth + (i + 1)];
+        }
+        MPI_Isend(sendBottom, width, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, &bottomSendRequest);
+	}
+    if (left) {
+        sendLeft = (float*)malloc(height * sizeof(float));
+        for (i = 0; i < height; i++) {
+            sendLeft[i] = grid[(i + 1) * blockWidth + 1];
+        }
+        MPI_Isend(sendLeft, height, MPI_FLOAT, leftNeighborRank, 0, MPI_COMM_WORLD, &leftSendRequest);
+	}
+    if (right) {
+        sendRight = (float*)malloc(height * sizeof(float));
+        for (i = 0; i < height; i++) {
+            sendRight[i] = grid[(i + 1) * blockWidth + width];
+        }
+        MPI_Isend(sendRight, height, MPI_FLOAT, rightNeighborRank, 0, MPI_COMM_WORLD, &rightSendRequest);
+	}
 
     // Receive boundary nodes from other processes
-    #pragma omp parallel sections private(i)
-    {
-        #pragma omp section
-        if (up) {
-            float* receiveUp = (float*)malloc(width * sizeof(float));
-            // Blocking receive: buf, count, datatype, source, tag, communicator, status
-            MPI_Recv(receiveUp, width, MPI_FLOAT, upperNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            for (i = 0; i < width; i++) {
-                grid[i + 1] = receiveUp[i];
-            }
-            free(receiveUp);
+    if (up) {
+        float* receiveUp = (float*)malloc(width * sizeof(float));
+        // Blocking receive: buf, count, datatype, source, tag, communicator, status
+        MPI_Recv(receiveUp, width, MPI_FLOAT, upperNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for (i = 0; i < width; i++) {
+            grid[i + 1] = receiveUp[i];
         }
-        #pragma omp section
-        if (bottom) {
-            float* receiveBottom = (float*)malloc(width * sizeof(float));
-            MPI_Recv(receiveBottom, width, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            for (i = 0; i < width; i++) {
-                grid[(height + 1) * blockWidth + (i + 1)] = receiveBottom[i];
-            }
-            free(receiveBottom);
+        free(receiveUp);
+    }
+    if (bottom) {
+        float* receiveBottom = (float*)malloc(width * sizeof(float));
+        MPI_Recv(receiveBottom, width, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for (i = 0; i < width; i++) {
+            grid[(height + 1) * blockWidth + (i + 1)] = receiveBottom[i];
         }
-        #pragma omp section
-        if (left) {
-            float* receiveLeft = (float*)malloc(height * sizeof(float));
-            MPI_Recv(receiveLeft, height, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            for (i = 0; i < height; i++) {
-                grid[(i + 1) * blockWidth] = receiveLeft[i];
-            }
-            free(receiveLeft);
+        free(receiveBottom);
+    }
+    if (left) {
+        float* receiveLeft = (float*)malloc(height * sizeof(float));
+        MPI_Recv(receiveLeft, height, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for (i = 0; i < height; i++) {
+            grid[(i + 1) * blockWidth] = receiveLeft[i];
         }
-        #pragma omp section
-        if (right) {
-            float* receiveRight = (float*)malloc(height * sizeof(float));
-            MPI_Recv(receiveRight, height, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            for (i = 0; i < height; i++) {
-                grid[(i + 1) * blockWidth + (width + 1)] = receiveRight[i];
-            }
-            free(receiveRight);
+        free(receiveLeft);
+    }
+    if (right) {
+        float* receiveRight = (float*)malloc(height * sizeof(float));
+        MPI_Recv(receiveRight, height, MPI_FLOAT, bottomNeighborRank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for (i = 0; i < height; i++) {
+            grid[(i + 1) * blockWidth + (width + 1)] = receiveRight[i];
         }
+        free(receiveRight);
     }
 
     // Wait sending to compelete and delete allocated arrays
@@ -317,19 +270,15 @@ int main(int argc, char **argv) {
     // Local residuals array
     float* rk = (float*)malloc(blockWidth * blockHeight * sizeof(float));
     // Fill boundary with zeros
-    #pragma omp parallel for
     for (int j = 0; j < blockWidth; j++) {
 		rk[j] = 0;
     }
-    #pragma omp parallel for
     for (int j = 0; j < blockWidth; j++) {
 		rk[(blockHeight - 1) * blockWidth + j] = 0;
     }
-    #pragma omp parallel for
     for (int i = 0; i < blockHeight; i++) {
 		rk[i * blockWidth] = 0;
     }
-    #pragma omp parallel for
     for (int i = 0; i < blockHeight; i++) {
 		rk[i * blockWidth + (blockWidth - 1)] = 0;
     }
@@ -340,7 +289,6 @@ int main(int argc, char **argv) {
     float stopCondition;
 
     // Find real values in the block
-	#pragma omp parallel for
 	for (int i = 1; i < blockHeight - 1; i++) {
 		for (int j = 1; j < blockWidth - 1; j++) {
 			realValues[i * blockWidth + j] = u(a1 + (i + startX) * stepX, b1 + (j + startY) * stepY);
@@ -349,42 +297,37 @@ int main(int argc, char **argv) {
 
     // Find global boundary values in the block
 	if (startX == 0) {
-        #pragma omp parallel for
 		for (int j = 0; j < blockWidth; j++) {
 			grid[j] = u(a1 + startX * stepX, b1 + (j + startY) * stepY);
 		}
 	}
 
 	if (endX == n) {
-        #pragma omp parallel for
 		for (int j = 0; j < blockWidth; j++) {
             grid[(blockHeight - 1) * blockWidth + j] = u(a1 + (blockHeight - 1 + startX) * stepX, b1 + (j + startY) * stepY);
 		}
 	}
 
 	if (startY == 0) {
-        #pragma omp parallel for
 		for (int i = 0; i < blockHeight; i++) {
             grid[i * blockWidth] = u(a1 + (i + startX) * stepX, b1 + startY * stepY);
 		}
 	}
 
 	if (endY == n) {
-        #pragma omp parallel for
 		for (int i = 0; i < blockHeight; i++) {
             grid[i * blockWidth + (blockWidth - 1)] = u(a1 + (i + startX) * stepX, b1 + (blockWidth - 1 + startY) * stepY);
 		}
     }
 
     // Initializing grid with starting values
-    #pragma omp parallel for
     for (int i = 1; i < blockHeight - 1; i++) {
 		for (int j = 1; j < blockWidth - 1; j++) {
 			grid[i * blockWidth + j] = 0;
 		}
 	}
 
-    FILE *f = fopen("resultHybrid.txt", "w");
+    FILE *f = fopen("resultMPI.txt", "w");
     if (f == NULL) {
         printf("Error opening file!\n");
         exit(1);
@@ -395,7 +338,6 @@ int main(int argc, char **argv) {
     do {
         step++;
         // Find residual using difference scheme
-        #pragma omp parallel for
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
@@ -415,7 +357,6 @@ int main(int argc, char **argv) {
         passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
 
         // Find A * rk using difference scheme
-        #pragma omp parallel for
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
@@ -437,7 +378,6 @@ int main(int argc, char **argv) {
         tau = tau1 / tau2;
 
         // Find new approximation
-        #pragma omp parallel for
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const int index = i * blockWidth + j;
@@ -449,7 +389,6 @@ int main(int argc, char **argv) {
 
         // Deviation
         error = 0;
-        #pragma omp parallel for reduction(+:error)
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const int index = i * blockWidth + j;
