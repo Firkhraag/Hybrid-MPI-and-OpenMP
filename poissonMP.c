@@ -236,6 +236,9 @@ int main(int argc, char **argv) {
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
 
+        printf("tau1: %f\n", tau1);
+        printf("tau2: %f\n\n", tau2);
+
         tau = tau1 / tau2;
         // printf("tau: %f\n", tau);
 
