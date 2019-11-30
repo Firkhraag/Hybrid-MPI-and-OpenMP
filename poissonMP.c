@@ -238,6 +238,8 @@ int main(int argc, char **argv) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const int index = i * blockWidth + j;
                 error += (realValues[index] - grid[index]) * (realValues[index] - grid[index]);
+                printf("Real: %f\n", realValues[index]);
+                printf("Found: %f\n", grid[index]);
             }
         }
 
