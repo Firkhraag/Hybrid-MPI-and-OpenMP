@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
     int step = -1;
     float error;
     do {
-        printf("Step: %d", step)
+        printf("Step: %d", step);
         step++;
         // Find residual using difference scheme
         #pragma omp parallel for
