@@ -396,7 +396,7 @@ int main(int argc, char **argv) {
             printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
         }
 
-        float tau = tau1Global / tau2Global;
+        float tau = tau1 / tau2;
 
         // Find new approximation
         for (int i = 1; i < blockHeight - 1; i++) {
