@@ -82,13 +82,25 @@ int main(int argc, char **argv) {
     const int blockPositionX = currentRank / numOfBlocksY;
     const int blockPositionY = currentRank % numOfBlocksY;
 
-	const int blockSizeX = n / numOfBlocksX;
-	const int blockSizeY = n / numOfBlocksY;
+	// const int blockSizeX = n / numOfBlocksX;
+	// const int blockSizeY = n / numOfBlocksY;
 
-	const int startX = fmax(0, blockSizeX * blockPositionX - 1);
+	// const int startX = fmax(0, blockSizeX * blockPositionX - 1);
+	// const int endX = blockPositionX + 1 < numOfBlocksX ? startX + blockSizeX : n;
+
+	// const int startY = fmax(0, blockSizeY * blockPositionY - 1);
+	// const int endY = blockPositionY + 1 < numOfBlocksY ? startY + blockSizeY : n;
+
+	// const int blockHeight = endX - startX + 1;
+	// const int blockWidth = endY - startY + 1;
+
+    const int blockSizeX = (n + 1) / numOfBlocksX;
+	const int blockSizeY = (n + 1) / numOfBlocksY;
+
+	const int startX = fmax(0, blockSizeX * blockPositionX);
 	const int endX = blockPositionX + 1 < numOfBlocksX ? startX + blockSizeX : n;
 
-	const int startY = fmax(0, blockSizeY * blockPositionY - 1);
+	const int startY = fmax(0, blockSizeY * blockPositionY);
 	const int endY = blockPositionY + 1 < numOfBlocksY ? startY + blockSizeY : n;
 
 	const int blockHeight = endX - startX + 1;

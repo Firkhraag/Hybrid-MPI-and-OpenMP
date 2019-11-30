@@ -45,7 +45,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
 }
 
 // For each block
-void passInformationBetweenProcesses(const int currentRank, const int numOfBlocksX, const int numOfBlocksY, const int blockPositionX, const int blockPositionY, float* grid,
+void passInformationBetweenProcesses(const int numOfBlocksX, const int numOfBlocksY, const int blockPositionX, const int blockPositionY, float* grid,
                                     const int blockWidth, const int blockHeight) {
 
     bool up = true;
@@ -90,8 +90,8 @@ void passInformationBetweenProcesses(const int currentRank, const int numOfBlock
 
     const int upperNeighborRank = numOfBlocksY * (blockPositionX - 1) + blockPositionY;
     const int bottomNeighborRank = numOfBlocksY * (blockPositionX + 1) + blockPositionY;
-    const int leftNeighborRank = numOfBlocksY * blockPositionX + blockPositionY - 1;
-    const int rightNeighborRank = numOfBlocksY * blockPositionX + blockPositionY + 1;
+    const int leftNeighborRank = numOfBlocksY * blockPositionX + (blockPositionY - 1);
+    const int rightNeighborRank = numOfBlocksY * blockPositionX + (blockPositionY + 1);
 
     MPI_Status status;
     MPI_Request leftSendRequest, rightSendRequest, upSendRequest, bottomSendRequest;
@@ -229,13 +229,13 @@ int main(int argc, char **argv) {
     const int blockPositionX = currentRank / numOfBlocksY;
     const int blockPositionY = currentRank % numOfBlocksY;
 
-	const int blockSizeX = n / numOfBlocksX;
-	const int blockSizeY = n / numOfBlocksY;
+    const int blockSizeX = (n + 1) / numOfBlocksX;
+	const int blockSizeY = (n + 1) / numOfBlocksY;
 
-	const int startX = fmax(0, blockSizeX * blockPositionX - 1);
+	const int startX = fmax(0, blockSizeX * blockPositionX);
 	const int endX = blockPositionX + 1 < numOfBlocksX ? startX + blockSizeX : n;
 
-	const int startY = fmax(0, blockSizeY * blockPositionY - 1);
+	const int startY = fmax(0, blockSizeY * blockPositionY);
 	const int endY = blockPositionY + 1 < numOfBlocksY ? startY + blockSizeY : n;
 
 	const int blockHeight = endX - startX + 1;
@@ -354,7 +354,7 @@ int main(int argc, char **argv) {
         }
 
         // Pass residuals to adjacent processes
-        passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
+        passInformationBetweenProcesses(numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
 
         // Find A * rk using difference scheme
         for (int i = 1; i < blockHeight - 1; i++) {
