@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <mpi.h>
 
+// Bool type
 typedef enum {false, true} bool;
 
 // Given functions
@@ -25,77 +26,10 @@ float F(float x, float y) {
     return u(x, y) * ((x + y) * (x + y + 2) - (4 + x) * (-4 + 8 * (x + y) * (x + y)));
 }
 
-// // Grid steps
-// float xi(const int a1, const int localIndex, const int processOffset, const int stepX) {
-//     // printf("wtf: %f\n", a1 + (localIndex + processOffset) * stepX);
-//     // printf("wtf: %f\n", a1);
-//     // printf("wtf: %f\n", localIndex);
-//     // printf("wtf: %f\n", processOffset);
-//     // printf("wtf: %f\n", stepX);
-//     return a1 + (localIndex + processOffset) * stepX;
-// }
-
-// float yj(const int b1, const int localIndex, const int processOffset, const int stepY) {
-//     return b1 + (localIndex + processOffset) * stepY;
-// }
-
-// // Grid elements
-// float getGridElement(float* grid, const int i, const int j, const int n) {
-//     return grid[i * (n + 1) + j];
-// }
-
-// // Difference schemes
-// float leftDiffSchemeX(float* grid, const int i, const int j, const int n) {
-//     return getGridElement(grid, i + 1, j, n) - getGridElement(grid, i, j, n);
-// }
-
-// float rightDiffSchemeX(float* grid, const int i, const int j, const int n) {
-//     return getGridElement(grid, i, j, n) - getGridElement(grid, i - 1, j, n);
-// }
-
-// float leftDiffSchemeY(float* grid, const int i, const int j, const int n) {
-//     return getGridElement(grid, i, j + 1, n) - getGridElement(grid, i, j, n);
-// }
-
-// float rightDiffSchemeY(float* grid, const int i, const int j, const int n) {
-//     return getGridElement(grid, i, j, n) - getGridElement(grid, i, j - 1, n);
-// }
-
-// // Difference schemes
-// float leftDiffSchemeX(float* grid, const int i, const int j, const int blockWidth) {
-//     const int index = i * blockWidth + j;
-//     return grid[index + blockWidth] - grid[index];
-// }
-
-// float rightDiffSchemeX(float* grid, const int i, const int j, const int blockWidth) {
-//     const int index = i * blockWidth + j;
-//     return grid[index] - grid[index - blockWidth];
-// }
-
-// float leftDiffSchemeY(float* grid, const int i, const int j, const int blockWidth) {
-//     const int index = i * blockWidth + j;
-//     return grid[index + 1] - grid[index];
-// }
-
-// float rightDiffSchemeY(float* grid, const int i, const int j, const int blockWidth) {
-//     const int index = i * blockWidth + j;
-//     return grid[index] - grid[index - 1];
-// }
-
-// Laplace difference scheme
-float laplaceDiffScheme(float* grid, const float x, const float y, const int index, const int stepX, const int stepY,
-                        const int stepXCoeff, const int stepYCoeff, const int blockWidth) {
-
-    return -(stepXCoeff * (k(x + 0.5 * stepX) * (grid[index + blockWidth] - grid[index]) -
-        k(x - 0.5 * stepX) * (grid[index] - grid[index - blockWidth])) +
-        stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) - (grid[index] - grid[index - 1]))) +
-        q(x, y) * grid[index];
-}
-
 // Dot product
 float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, float stepX, float stepY) {
     float result = 0;
-    #pragma omp parallel for schedule (static) reduction(+:result)
+    #pragma omp parallel for reduction(+:result)
     for (int i = 1; i < blockHeight - 1; i++) {
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
@@ -301,6 +235,7 @@ int main(int argc, char **argv) {
 
     struct timeval start, end;
 
+    // Get start time
     gettimeofday(&start, NULL);
 
     // Rectangle
@@ -310,12 +245,10 @@ int main(int argc, char **argv) {
     const float b2 = 2.0;
 
     // Epsilon
-    const float eps = 1e-3;
+    const float eps = 1e-5;
 
     // Square grid
-    const int n = 10;
-    // From 0 to n
-    // const int dim = (n + 1) * (n + 1);
+    const int n = 40;
 
     // Step
     const float stepX = (a2 - a1) / n;
@@ -323,18 +256,6 @@ int main(int argc, char **argv) {
 
     const float stepXCoeff = 1 / (stepX * stepX);
     const float stepYCoeff = 1 / (stepY * stepY);
-
-    // // Grid with i, j as an array
-    // float* grid = (float*)malloc((m + 1) * (n + 1) * sizeof(float));
-
-    // // Real values for comparison
-    // float* realValues = (float*)malloc((m + 1) * (n + 1) * sizeof(float));
-
-    // float **realValues;
-    // realValues = (float **)malloc((m - 1) * sizeof(float *));
-    // for (int i = 0; i < (m - 1); i++) {
-    //     *(realValues + i) = (float *)malloc((n - 1) * sizeof(float));
-    // }
 
     float tau;
 
@@ -344,8 +265,6 @@ int main(int argc, char **argv) {
 	MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &currentRank);
-
-    // float starttime = MPI_Wtime();
 
     int numOfBlocksY = 1;
 	while (size > 2 * numOfBlocksY * numOfBlocksY) {
@@ -383,100 +302,113 @@ int main(int argc, char **argv) {
     printf("StartY: %d\n", startY);
     printf("EndY: %d\n", endY);
     printf("BlockHeight: %d\n", blockHeight);
+    printf("BlockWidth: %d\n", blockWidth);
     printf("------\n");
 
-    // Local grid approximation
+    // Local grid approximation array
     float* grid = (float*)malloc(blockWidth * blockHeight * sizeof(float));
 
-    // Difference between two steps
+    // Difference between two steps array
     float* gridDiff = (float*)malloc(blockWidth * blockHeight * sizeof(float));
 
-    // Local real values
+    // Local real values array
     float* realValues = (float*)malloc(blockWidth * blockHeight * sizeof(float));
 
-    // Local residuals
+    // Local residuals array
     float* rk = (float*)malloc(blockWidth * blockHeight * sizeof(float));
 
-    // A * rk
+    // A * rk array
     float* ark = (float*)malloc(blockWidth * blockHeight * sizeof(float));
 
-    // // Error
-    // float* error = (float*)malloc(blockWidth * blockHeight * sizeof(float));
-
-	int i;
-	int j;
     float stopCondition;
 
     // Find real values in the block
-	#pragma omp parallel for schedule (static)
-	for (i = 1; i < blockHeight - 1; i++) {
-		for (j = 1; j < blockWidth - 1; j++) {
+	#pragma omp parallel for
+	for (int i = 1; i < blockHeight - 1; i++) {
+		for (int j = 1; j < blockWidth - 1; j++) {
 			realValues[i * blockWidth + j] = u(a1 + (i + startX) * stepX, b1 + (j + startY) * stepY);
 		}
 	}
 
     // Find global boundary values in the block
 	if (startX == 0) {
-        #pragma omp parallel for schedule (static)
-		for (j = 0; j < blockWidth; j++) {
+        #pragma omp parallel for
+		for (int j = 0; j < blockWidth; j++) {
 			grid[j] = u(a1 + startX * stepX, b1 + (j + startY) * stepY);
 		}
 	}
 
 	if (endX == n) {
-        #pragma omp parallel for schedule (static)
-		for (j = 0; j < blockWidth; j++) {
+        #pragma omp parallel for
+		for (int j = 0; j < blockWidth; j++) {
             grid[(blockHeight - 1) * blockWidth + j] = u(a1 + (blockHeight - 1 + startX) * stepX, b1 + (j + startY) * stepY);
 		}
 	}
 
 	if (startY == 0) {
-        #pragma omp parallel for schedule (static)
-		for (i = 0; i < blockHeight; i++) {
+        #pragma omp parallel for
+		for (int i = 0; i < blockHeight; i++) {
             grid[i * blockWidth] = u(a1 + (i + startX) * stepX, b1 + startY * stepY);
 		}
 	}
 
 	if (endY == n) {
-        #pragma omp parallel for schedule (static)
-		for (i = 0; i < blockHeight; i++) {
+        #pragma omp parallel for
+		for (int i = 0; i < blockHeight; i++) {
             grid[i * blockWidth + (blockWidth - 1)] = u(a1 + (i + startX) * stepX, b1 + (blockWidth - 1 + startY) * stepY);
 		}
     }
 
     // Initializing grid with starting values
-    #pragma omp parallel for schedule (static)
-    for (i = 1; i < blockHeight - 1; i++) {
-		for (j = 1; j < blockWidth - 1; j++) {
-			grid[i * blockWidth + j] = 2;       // CHANGE TO 0!!!
+    #pragma omp parallel for
+    for (int i = 1; i < blockHeight - 1; i++) {
+		for (int j = 1; j < blockWidth - 1; j++) {
+			grid[i * blockWidth + j] = 0;
 		}
 	}
 
+    FILE *f = fopen("poisson40Test.txt", "w");
+    if (f == NULL) {
+        printf("Error opening file!\n");
+        exit(1);
+    }
+    int step = -1;
+    float error;
+
     do {
-        // Find residual
-        #pragma omp parallel for schedule (static)
-        for (i = 1; i < blockHeight - 1; i++) {
-            for (j = 1; j < blockWidth - 1; j++) {
+        step++;
+        // Find residual using difference scheme
+        #pragma omp parallel for
+        for (int i = 1; i < blockHeight - 1; i++) {
+            for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
                 const float y = b1 + (j + startY) * stepY;
                 const int index = i * blockWidth + j;
-                rk[i * blockWidth + j] =
-                    laplaceDiffScheme(grid, x, y, index, stepX, stepY, stepXCoeff, stepYCoeff, blockWidth) - F(x, y);
+                rk[index] = -(
+                    stepXCoeff * (k(x + 0.5 * stepX) * (grid[index + blockWidth] - grid[index]) -
+                    k(x - 0.5 * stepX) * (grid[index] - grid[index - blockWidth])) +
+                    stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
+                    (grid[index] - grid[index - 1]))) +
+                    q(x, y) * grid[index] - F(x, y);
             }
         }
 
         // Pass residuals to adjacent processes
-        // passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
+        passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
 
-        // Find A * rk
-        #pragma omp parallel for schedule (static)
-        for (i = 1; i < blockHeight - 1; i++) {
-            for (j = 1; j < blockWidth - 1; j++) {
+        // Find A * rk using difference scheme
+        #pragma omp parallel for
+        for (int i = 1; i < blockHeight - 1; i++) {
+            for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
                 const float y = b1 + (j + startY) * stepY;
                 const int index = i * blockWidth + j;
-                ark[index] = laplaceDiffScheme(rk, x, y, index, stepX, stepY, stepXCoeff, stepYCoeff, blockWidth);
-                printf("Values: %f\n", ark[index]);
+                ark[index] = -(
+                    stepXCoeff * (k(x + 0.5 * stepX) * (rk[index + blockWidth] - rk[index]) -
+                    k(x - 0.5 * stepX) * (rk[index] - rk[index - blockWidth])) +
+                    stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
+                    (rk[index] - rk[index - 1]))) +
+                    q(x, y) * rk[index];
             }
         }
 
@@ -487,9 +419,9 @@ int main(int argc, char **argv) {
         tau = tau1 / tau2;
 
         // Find new approximation
-        #pragma omp parallel for schedule (static)
-        for (i = 1; i < blockHeight - 1; i++) {
-            for (j = 1; j < blockWidth - 1; j++) {
+        #pragma omp parallel for
+        for (int i = 1; i < blockHeight - 1; i++) {
+            for (int j = 1; j < blockWidth - 1; j++) {
                 const int index = i * blockWidth + j;
                 const float gridElementOld = grid[index];
                 grid[index] -= tau * rk[index];
@@ -497,59 +429,51 @@ int main(int argc, char **argv) {
             }
         }
 
-        // // Deviation
-        // #pragma omp parallel for schedule (static)
-        // for (i = 1; i < blockHeight - 1; i++) {
-        //     for (j = 1; j < blockWidth - 1; j++) {
-        //         const int index = i * blockWidth + j;
-        //         error[index] = (realValues[index] - grid[index]) * (realValues[index] - grid[index]);
-        //     }
-        // }
+        // Deviation
+        error = 0;
+        #pragma omp parallel for reduction(+:error)
+        for (int i = 1; i < blockHeight - 1; i++) {
+            for (int j = 1; j < blockWidth - 1; j++) {
+                const int index = i * blockWidth + j;
+                error += (realValues[index] - grid[index]) * (realValues[index] - grid[index]);
+            }
+        }
 
-        stopCondition = dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY);
+        float globalError = 0;
+        // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
+        MPI_Reduce(&error, &globalError, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        fprintf(f, "Step: %d. Error: %f\n", step, globalError);
+
+        stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
 
         // Wait for all processes to complete the step
         MPI_Barrier(MPI_COMM_WORLD);
 
     } while (stopCondition > eps);
 
-    // Deviation
-    float localError = 0;
-    #pragma omp parallel for schedule (static) reduction(+:localError)
-    for (i = 1; i < blockHeight - 1; i++) {
-        for (j = 1; j < blockWidth - 1; j++) {
-            const int index = i * blockWidth + j;
-            localError += (realValues[index] - grid[index]) * (realValues[index] - grid[index]);
-        }
-    }
-
-    float error;
-    // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
-    MPI_Reduce(&localError, &error, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    free(grid);
     free(gridDiff);
-    free(realValues);
     free(rk);
     free(ark);
 
-    // float endtime = MPI_Wtime();
-    // printf("Execution time: %f sec\n", endtime-starttime);
+    // End time
+    gettimeofday(&end, NULL);
+    // In seconds
+    double time_taken = end.tv_sec + end.tv_usec / 1e6 -
+                        start.tv_sec - start.tv_usec / 1e6;
+    fprintf(f, "Execution time: %f\n", time_taken);
+
+    // for (int i = 1; i < blockHeight - 1; i++) {
+    //     for (int j = 1; j < blockWidth - 1; j++) {
+    //         fprintf(f, "Original function: %f, Approximated result: %f\n", realValues[i * blockWidth + j], grid[i * blockWidth + j]);
+    //     }
+    // }
+
+    fclose(f);
+    free(realValues);
+    free(grid);
 
     MPI_Finalize();
-
-    FILE *f = fopen("resultTest.txt", "w");
-    if (f == NULL) {
-        printf("Error opening file!\n");
-        exit(1);
-    }
-
-    gettimeofday(&end, NULL);
-    double time_taken = end.tv_sec + end.tv_usec / 1e6 -
-                        start.tv_sec - start.tv_usec / 1e6; // in seconds
-    fprintf(f, "Error: %f\n", error);
-    fprintf(f, "Execution time: %f\n", time_taken);
-    fclose(f);
     return 0;
 }

@@ -6,314 +6,267 @@
 #include <sys/time.h>
 // #include <mpi.h>
 
-// Rectangle
-#define A1 -1.0
-#define A2 2.0
-#define B1 -2.0
-#define B2 2.0
-
-#define A_DIFF 3.0
-#define B_DIFF 4.0
-
-// Grid
-#define M1 80
-#define N1 80
-
-// Epsilon
-#define EPS 0.001
-
-// For comparison
-double xi(int i, double stepX) {
-    return A1 + i * stepX;
-}
-
-double yj(int j, double stepY) {
-    return B1 + j * stepY;
-}
-// --------------
+// Bool type
+typedef enum {false, true} bool;
 
 // Given functions
-double u1(double x, double y) {
+float u(float x, float y) {
     return exp(1 - (x + y) * (x + y));
 }
 
-double deriv_u1(double x, double y) {
-    return -2 * (x + y) * exp(1 - (x + y) * (x + y));
-}
-
-double k2(double x) {
+float k(float x) {
     return 4 + x;
 }
 
-double q3(double x, double y) {
+float q(float x, float y) {
     return (x + y) * (x + y);
 }
 
-double F(double x, double y) {
-    return u1(x, y) * ((x + y) * (x + y + 2) - (4 + x) * (-4 + 8 * (x + y) * (x + y)));
-}
-
-// Boundary conditions
-double gammaA1(double y) {
-    return exp(y * (2 - y));
-}
-
-double gammaA2(double y) {
-    return exp(-4*y - y*y - 3);
-}
-
-double gammaB1(double x) {
-    return exp(4*x - x*x - 3);
-}
-
-double gammaB2(double x) {
-    return exp(-4*x - x*x - 3);
-}
-
-// Step X
-double h1(int m) {
-    return A_DIFF / m;
-}
-
-// Step Y
-double h2(int n) {
-    return B_DIFF / n;
+float F(float x, float y) {
+    return u(x, y) * ((x + y) * (x + y + 2) - (4 + x) * (-4 + 8 * (x + y) * (x + y)));
 }
 
 // Dot product
-double dotProduct(double* u, double* v, int dim, double stepX, double stepY) {
-    double result = 0;
-    // #pragma omp parallel
-    #pragma omp parallel for schedule (static) reduction(+:result)
-    for (int i = 0; i < dim; i++) {
-        //printf(" Thread %d: %d\n", omp_get_thread_num(), i);
-        result += u[i] * v[i];
+float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, float stepX, float stepY) {
+    float result = 0;
+    #pragma omp parallel for reduction(+:result)
+    for (int i = 1; i < blockHeight - 1; i++) {
+        for (int j = 1; j < blockWidth - 1; j++) {
+            const int index = i * blockWidth + j;
+            result += grid1[index] * grid2[index];
+        }
     }
-    return result * stepX * stepY;
+    result = result * stepX * stepY;
+
+    return result;
 }
 
-double** getMatrixA(int m, int n, int dim, double stepX, double stepY, double* xs, double* ys) {
-    double stepCoeffX = 1 / (stepX * stepX);
-    double stepCoeffY = 1 / (stepY * stepY);
-    double **A;
-    A = (double **)malloc(dim * sizeof(double *));
-    for (int i = 0; i < dim; i++) {
-        *(A + i) = (double *)malloc(dim * sizeof(double));
-        for (int j = 0; j < dim; j++) {
-            A[i][j] = 0;
-        }
-    }
-
-    A[0][0] =
-            stepCoeffX * (k2(xs[1] + 0.5 * stepX) + k2(xs[1] - 0.5 * stepX)) +
-            stepCoeffY * (2 * k2(xs[1])) + q3(xs[1], ys[1]);
-
-    A[0][1] = -stepCoeffY * k2(xs[1]);
-    A[0][n - 1] = -stepCoeffX * k2(xs[1] + 0.5 * stepX);
-
-    #pragma omp parallel for schedule (static)
-    for (int j = 2; j < n; j++) {
-        A[j - 1][j - 2] = -stepCoeffY * k2(xs[1]);
-
-        A[j - 1][j - 1] =
-            stepCoeffX * (k2(xs[1] + 0.5 * stepX) + k2(xs[1] - 0.5 * stepX)) +
-            stepCoeffY * (2 * k2(xs[1])) + q3(xs[1], ys[j]);
-
-        A[j - 1][j] = -stepCoeffY * k2(xs[1]);
-        A[j - 1][j + n - 2] = -stepCoeffX * k2(xs[1] + 0.5 * stepX);
-    }
-
-    #pragma omp parallel for schedule (static)
-    for (int i = 2; i < m - 1; i++) {
-        for (int j = 1; j < n; j++) {
-            A[(n - 1)*(i - 1) + (j - 1)][(n - 1)*(i - 1) + (j - 1) - (n - 1)] = -stepCoeffX * k2(xs[i] - 0.5 * stepX);
-            A[(n - 1)*(i - 1) + (j - 1)][(n - 1)*(i - 1) + (j - 1) - 1] = -stepCoeffY * k2(xs[i]);
-
-            A[(n - 1)*(i - 1) + (j - 1)][(n - 1)*(i - 1) + (j - 1)] =
-                stepCoeffX * (k2(xs[i] + 0.5 * stepX) + k2(xs[i] - 0.5 * stepX)) +
-                stepCoeffY * (2 * k2(xs[i])) + q3(xs[i], ys[j]);
-
-            A[(n - 1)*(i - 1) + (j - 1)][(n - 1)*(i - 1) + (j - 1) + 1] = -stepCoeffY * k2(xs[i]);
-            A[(n - 1)*(i - 1) + (j - 1)][(n - 1)*(i - 1) + (j - 1) + (n - 1)] = -stepCoeffX * k2(xs[i] + 0.5 * stepX);
-        }
-    }
-    #pragma omp parallel for schedule (static)
-    for (int j = 1; j < n - 1; j++) {
-        A[(n - 1)*(m - 2) + (j - 1)][(n - 1)*(m - 2) + (j - 1) - (n - 1)] = -stepCoeffX * k2(xs[m - 1] - 0.5 * stepX);
-        A[(n - 1)*(m - 2) + (j - 1)][(n - 1)*(m - 2) + (j - 1) - 1] = -stepCoeffY * k2(xs[m - 1]);
-
-        A[(n - 1)*(m - 2) + (j - 1)][(n - 1)*(m - 2) + (j - 1)] =
-            stepCoeffX * (k2(xs[m - 1] + 0.5 * stepX) + k2(xs[m - 1] - 0.5 * stepX)) +
-            stepCoeffY * (2 * k2(xs[m - 1])) + q3(xs[m - 1], ys[j]);
-
-        A[(n - 1)*(m - 2) + (j - 1)][(n - 1)*(m - 2) + (j - 1) + 1] = -stepCoeffY * k2(xs[m - 1]);
-    }
-
-    A[dim - 1][dim - n] = -stepCoeffX * k2(xs[m - 1] - 0.5 * stepX);
-    A[dim - 1][dim - 2] = -stepCoeffY * k2(xs[m - 1]);
-    A[dim - 1][dim - 1] =
-            stepCoeffX * (k2(xs[m - 1] + 0.5 * stepX) + k2(xs[m - 1] - 0.5 * stepX)) +
-            stepCoeffY * (2 * k2(xs[m - 1])) + q3(xs[m - 1], ys[n - 1]);
-
-    return A;
-}
-
-double* getVectorB(int m, int n, int dim, double stepX, double stepY, double* xs, double* ys) {
-    double stepCoeffX = 1 / (stepX * stepX);
-    double stepCoeffY = 1 / (stepY * stepY);
-    double* B;
-    B = (double *)malloc(dim * sizeof(double));
-
-    #pragma omp parallel for schedule (static)
-    for (int i = 1; i < m; i++) {
-        for (int j = 1; j < n; j++) {
-            B[(n - 1)*(i - 1) + (j - 1)] = F(xs[i], ys[j]);
-        }
-    }
-    #pragma omp parallel for schedule (static)
-    for (int j = 1; j < n; j++) {
-        B[j - 1] += stepCoeffX * k2(xs[1] - 0.5 * stepX) * gammaA1(ys[j]);
-    }
-    #pragma omp parallel for schedule (static)
-    for (int j = 1; j < n; j++) {
-        B[(n - 1)*(m - 2) + (j - 1)] += stepCoeffX * k2(xs[m - 1] + 0.5 * stepX) * gammaA2(ys[j]);
-    }
-    B[0] += stepCoeffY * k2(xs[1]) * gammaB1(xs[1]);
-    B[dim - 1] += stepCoeffY * k2(xs[m - 1]) * gammaB2(xs[m - 1]);
-
-    return B;
-}
-
-double* iterativeMethod(int m, int n, double stepX, double stepY) {
-    int dim = (m - 1) * (n - 1);
-    double stepCoeffX = 1 / (stepX * stepX);
-    double stepCoeffY = 1 / (stepY * stepY);
-    
-    // Grid nodes
-    double* xs;
-    xs = (double *)malloc(m * sizeof(double));
-    for (int i = 0; i < m; i++) {
-        xs[i] = A1 + i * stepX;
-    }
-
-    double* ys;
-    ys = (double *)malloc(n * sizeof(double));
-    for (int j = 0; j < n; j++) {
-        ys[j] = B1 + j * stepY;
-    }
-
-    // Initializing with 2
-    double* w;
-    w = (double *)malloc(dim * sizeof(double));
-    for (int i = 0; i < dim; i++) {
-        w[i] = 2;
-    }
-
-    double* wDiff;
-    wDiff = (double *)malloc(dim * sizeof(double));
-
-    double **A = getMatrixA(m, n, dim, stepX, stepY, xs, ys);
-
-    // printf("Matrix A\n");
-    // for (int i = 0; i < dim; i++) {
-    //     for (int j = 0; j < dim; j++) {
-    //         printf("%f ", A[i][j]);
-    //     }
-    //     printf("\n");
-    // }
-
-    double* B = getVectorB(m, n, dim, stepX, stepY, xs, ys);
-
-    // printf("Vector B\n");
-    // for (int i = 0; i < dim; i++) {
-    //     printf("%f\n", B[i]);
-    // }
-
-    double* r;
-    r = (double *)malloc(dim * sizeof(double));
-
-    double* Ar;
-    Ar = (double *)malloc(dim * sizeof(double));
-
-    // int k = 0;
-    do {
-        // Find r
-        #pragma omp parallel for schedule (static)
-        for (int i = 0; i < dim; i++) {
-            r[i] = 0;
-            for (int j = 0; j < dim; j++) {
-                if (fabs(A[i][j]) > 10e-7) {
-                    r[i] += A[i][j] * w[j];
-                }
-            }
-            r[i] -= B[i];
-        }
-
-        // Find tau
-        #pragma omp parallel for schedule (static)
-        for (int i = 0; i < dim; i++) {
-            Ar[i] = 0;
-            for (int j = 0; j < dim; j++) {
-                if (fabs(A[i][j]) > 10e-7) {
-                    Ar[i] += A[i][j] * r[j];
-                }
-            }
-        }
-        double tau = dotProduct(Ar, r, dim, stepX, stepY) / dotProduct(Ar, Ar, dim, stepX, stepY);
-
-        #pragma omp parallel for schedule (static)
-        for (int i = 0; i < dim; i++) {
-            double temp = w[i];
-            w[i] = w[i] - tau * r[i];
-            wDiff[i] = w[i] - temp;
-        }
-        //k++;
-    } while (sqrt(dotProduct(wDiff, wDiff, dim, stepX, stepY)) > EPS);
-    // } while ((sqrt(dotProduct(wDiff, wDiff, dim, stepX, stepY)) > EPS) && (k < dim));
-    //} while (k < dim);
-    //printf("K: %d\n", k);
-    free(A);
-    free(B);
-    free(wDiff);
-    free(Ar);
-    free(xs);
-    free(ys);
-    return w;
-}
-
-int main() {
+int main(int argc, char **argv) {
 
     struct timeval start, end;
 
+    // Get start time
     gettimeofday(&start, NULL);
 
-    FILE *f = fopen("error80.txt", "w");
+    // Rectangle
+    const float a1 = -1.0;
+    const float a2 = 2.0;
+    const float b1 = -2.0;
+    const float b2 = 2.0;
+
+    // Epsilon
+    const float eps = 1e-5;
+
+    // Square grid
+    const int n = 40;
+
+    // Step
+    const float stepX = (a2 - a1) / n;
+    const float stepY = (b2 - b1) / n;
+
+    const float stepXCoeff = 1 / (stepX * stepX);
+    const float stepYCoeff = 1 / (stepY * stepY);
+
+    float tau;
+
+	int size = 1;
+	int currentRank = 0;
+
+    int numOfBlocksY = 1;
+	while (size > 2 * numOfBlocksY * numOfBlocksY) {
+		numOfBlocksY *= 2;
+	}
+	const int numOfBlocksX = size / numOfBlocksY;
+
+	// Global block position
+    const int blockPositionX = currentRank / numOfBlocksY;
+    const int blockPositionY = currentRank % numOfBlocksY;
+
+	const int blockSizeX = n / numOfBlocksX;
+	const int blockSizeY = n / numOfBlocksY;
+
+	const int startX = fmax(0, blockSizeX * blockPositionX - 1);
+	const int endX = blockPositionX + 1 < numOfBlocksX ? startX + blockSizeX : n;
+
+	const int startY = fmax(0, blockSizeY * blockPositionY - 1);
+	const int endY = blockPositionY + 1 < numOfBlocksY ? startY + blockSizeY : n;
+
+	const int blockHeight = endX - startX + 1;
+	const int blockWidth = endY - startY + 1;
+
+    printf("------\n");
+    printf("Size: %d\n", size);
+    printf("Rank: %d\n", currentRank);
+    printf("NumOfBlocksY: %d\n", numOfBlocksY);
+    printf("NumOfBlocksX: %d\n", numOfBlocksX);
+    printf("BlockPositionX: %d\n", blockPositionX);
+    printf("BlockPositionY: %d\n", blockPositionY);
+    printf("BlockSizeX: %d\n", blockSizeX);
+    printf("BlockSizeY: %d\n", blockSizeY);
+    printf("StartX: %d\n", startX);
+    printf("EndX: %d\n", endX);
+    printf("StartY: %d\n", startY);
+    printf("EndY: %d\n", endY);
+    printf("BlockHeight: %d\n", blockHeight);
+    printf("BlockWidth: %d\n", blockWidth);
+    printf("------\n");
+
+    // Local grid approximation array
+    float* grid = (float*)malloc(blockWidth * blockHeight * sizeof(float));
+
+    // Difference between two steps array
+    float* gridDiff = (float*)malloc(blockWidth * blockHeight * sizeof(float));
+
+    // Local real values array
+    float* realValues = (float*)malloc(blockWidth * blockHeight * sizeof(float));
+
+    // Local residuals array
+    float* rk = (float*)malloc(blockWidth * blockHeight * sizeof(float));
+
+    // A * rk array
+    float* ark = (float*)malloc(blockWidth * blockHeight * sizeof(float));
+
+    float stopCondition;
+
+    // Find real values in the block
+	#pragma omp parallel for
+	for (int i = 1; i < blockHeight - 1; i++) {
+		for (int j = 1; j < blockWidth - 1; j++) {
+			realValues[i * blockWidth + j] = u(a1 + (i + startX) * stepX, b1 + (j + startY) * stepY);
+		}
+	}
+
+    // Find global boundary values in the block
+	if (startX == 0) {
+        #pragma omp parallel for
+		for (int j = 0; j < blockWidth; j++) {
+			grid[j] = u(a1 + startX * stepX, b1 + (j + startY) * stepY);
+		}
+	}
+
+	if (endX == n) {
+        #pragma omp parallel for
+		for (int j = 0; j < blockWidth; j++) {
+            grid[(blockHeight - 1) * blockWidth + j] = u(a1 + (blockHeight - 1 + startX) * stepX, b1 + (j + startY) * stepY);
+		}
+	}
+
+	if (startY == 0) {
+        #pragma omp parallel for
+		for (int i = 0; i < blockHeight; i++) {
+            grid[i * blockWidth] = u(a1 + (i + startX) * stepX, b1 + startY * stepY);
+		}
+	}
+
+	if (endY == n) {
+        #pragma omp parallel for
+		for (int i = 0; i < blockHeight; i++) {
+            grid[i * blockWidth + (blockWidth - 1)] = u(a1 + (i + startX) * stepX, b1 + (blockWidth - 1 + startY) * stepY);
+		}
+    }
+
+    // Initializing grid with starting values
+    #pragma omp parallel for
+    for (int i = 1; i < blockHeight - 1; i++) {
+		for (int j = 1; j < blockWidth - 1; j++) {
+			grid[i * blockWidth + j] = 0;
+		}
+	}
+
+    FILE *f = fopen("poisson160.txt", "w");
     if (f == NULL) {
         printf("Error opening file!\n");
         exit(1);
     }
-
-    printf("Starting the program\n");
-
-    double stepX1 = h1(M1);
-    double stepY1 = h2(N1);
-
-    double* res = iterativeMethod(M1, N1, stepX1, stepY1);
-
-    double error = 0;
-    #pragma omp parallel for schedule (static) reduction(+:error)
-    for (int i = 1; i < M1; i++) {
-        for (int j = 1; j < N1; j++) {
-            error += (u1(xi(i, stepX1), yj(j, stepY1)) - res[(N1 - 1)*(i - 1) + (j - 1)]) * (u1(xi(i, stepX1), yj(j, stepY1)) - res[(N1 - 1)*(i - 1) + (j - 1)]);
+    int step = -1;
+    float error;
+    do {
+        step++;
+        // Find residual using difference scheme
+        #pragma omp parallel for
+        for (int i = 1; i < blockHeight - 1; i++) {
+            for (int j = 1; j < blockWidth - 1; j++) {
+                const float x = a1 + (i + startX) * stepX;
+                const float y = b1 + (j + startY) * stepY;
+                const int index = i * blockWidth + j;
+                rk[index] = -(
+                    stepXCoeff * (k(x + 0.5 * stepX) * (grid[index + blockWidth] - grid[index]) -
+                    k(x - 0.5 * stepX) * (grid[index] - grid[index - blockWidth])) +
+                    stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
+                    (grid[index] - grid[index - 1]))) +
+                    q(x, y) * grid[index] - F(x, y);
+            }
         }
-    }
+
+        // Find A * rk using difference scheme
+        #pragma omp parallel for
+        for (int i = 1; i < blockHeight - 1; i++) {
+            for (int j = 1; j < blockWidth - 1; j++) {
+                const float x = a1 + (i + startX) * stepX;
+                const float y = b1 + (j + startY) * stepY;
+                const int index = i * blockWidth + j;
+                ark[index] = -(
+                    stepXCoeff * (k(x + 0.5 * stepX) * (rk[index + blockWidth] - rk[index]) -
+                    k(x - 0.5 * stepX) * (rk[index] - rk[index - blockWidth])) +
+                    stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
+                    (rk[index] - rk[index - 1]))) +
+                    q(x, y) * rk[index];
+            }
+        }
+
+        // Find tau
+        float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
+        float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
+
+        tau = tau1 / tau2;
+
+        // Find new approximation
+        #pragma omp parallel for
+        for (int i = 1; i < blockHeight - 1; i++) {
+            for (int j = 1; j < blockWidth - 1; j++) {
+                const int index = i * blockWidth + j;
+                const float gridElementOld = grid[index];
+                grid[index] -= tau * rk[index];
+                gridDiff[index] = grid[index] - gridElementOld;
+            }
+        }
+
+        // Deviation
+        error = 0;
+        #pragma omp parallel for reduction(+:error)
+        for (int i = 1; i < blockHeight - 1; i++) {
+            for (int j = 1; j < blockWidth - 1; j++) {
+                const int index = i * blockWidth + j;
+                error += (realValues[index] - grid[index]) * (realValues[index] - grid[index]);
+            }
+        }
+
+        fprintf(f, "Step: %d. Error: %f\n", step, error);
+
+        stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
+    } while (stopCondition > eps);
+
+    free(gridDiff);
+    free(rk);
+    free(ark);
+
+    // End time
     gettimeofday(&end, NULL);
+    // In seconds
     double time_taken = end.tv_sec + end.tv_usec / 1e6 -
-                        start.tv_sec - start.tv_usec / 1e6; // in seconds
-    fprintf(f, "Error: %f\n", error);
+                        start.tv_sec - start.tv_usec / 1e6;
     fprintf(f, "Execution time: %f\n", time_taken);
 
-    free(res);
+    // for (int i = 1; i < blockHeight - 1; i++) {
+    //     for (int j = 1; j < blockWidth - 1; j++) {
+    //         fprintf(f, "Original function: %f, Approximated result: %f\n", realValues[i * blockWidth + j], grid[i * blockWidth + j]);
+    //     }
+    // }
+
     fclose(f);
+    free(realValues);
+    free(grid);
+
+
     return 0;
 }

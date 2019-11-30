@@ -1,2 +1,0 @@
-Error: 2097.059661
-Execution time: 54.163051
