@@ -243,22 +243,24 @@ int main(int argc, char **argv) {
 	const int blockHeight = endX - startX + 1;
 	const int blockWidth = endY - startY + 1;
 
-    // printf("------\n");
-    // printf("Size: %d\n", size);
-    // printf("Rank: %d\n", currentRank);
-    // printf("NumOfBlocksY: %d\n", numOfBlocksY);
-    // printf("NumOfBlocksX: %d\n", numOfBlocksX);
-    // printf("BlockPositionX: %d\n", blockPositionX);
-    // printf("BlockPositionY: %d\n", blockPositionY);
-    // printf("BlockSizeX: %d\n", blockSizeX);
-    // printf("BlockSizeY: %d\n", blockSizeY);
-    // printf("StartX: %d\n", startX);
-    // printf("EndX: %d\n", endX);
-    // printf("StartY: %d\n", startY);
-    // printf("EndY: %d\n", endY);
-    // printf("BlockHeight: %d\n", blockHeight);
-    // printf("BlockWidth: %d\n", blockWidth);
-    // printf("------\n");
+    if (currentRank == 0) {
+        printf("------\n");
+        printf("Size: %d\n", size);
+        printf("Rank: %d\n", currentRank);
+        printf("NumOfBlocksY: %d\n", numOfBlocksY);
+        printf("NumOfBlocksX: %d\n", numOfBlocksX);
+        printf("BlockPositionX: %d\n", blockPositionX);
+        printf("BlockPositionY: %d\n", blockPositionY);
+        printf("BlockSizeX: %d\n", blockSizeX);
+        printf("BlockSizeY: %d\n", blockSizeY);
+        printf("StartX: %d\n", startX);
+        printf("EndX: %d\n", endX);
+        printf("StartY: %d\n", startY);
+        printf("EndY: %d\n", endY);
+        printf("BlockHeight: %d\n", blockHeight);
+        printf("BlockWidth: %d\n", blockWidth);
+        printf("------\n");
+    }
 
     // Local grid approximation array
     float* grid = (float*)malloc(blockWidth * blockHeight * sizeof(float));
@@ -394,10 +396,10 @@ int main(int argc, char **argv) {
         // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
         MPI_Bcast(&tau2Global, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-        // if (currentRank == 0) {
-        //     printf("tau1: %f\n", tau1);
-        //     printf("tau2: %f\n\n", tau2);
-        // }
+        if (currentRank == 0) {
+            printf("tau1: %f\n", tau1);
+            printf("tau2: %f\n\n", tau2);
+        }
 
         float tau = tau1Global / tau2Global;
 
