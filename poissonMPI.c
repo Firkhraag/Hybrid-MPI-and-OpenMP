@@ -234,11 +234,11 @@ int main(int argc, char **argv) {
     const int blockSizeX = (n + 1) / numOfBlocksX;
 	const int blockSizeY = (n + 1) / numOfBlocksY;
 
-	const int startX = fmax(0, blockSizeX * blockPositionX);
-	const int endX = blockPositionX + 1 < numOfBlocksX ? startX + blockSizeX : n;
+	const int startX = blockSizeX * blockPositionX;
+	const int endX = blockPositionX + 1 < numOfBlocksX ? startX + blockSizeX - 1 : n;
 
-	const int startY = fmax(0, blockSizeY * blockPositionY);
-	const int endY = blockPositionY + 1 < numOfBlocksY ? startY + blockSizeY : n;
+	const int startY = blockSizeY * blockPositionY;
+	const int endY = blockPositionY + 1 < numOfBlocksY ? startY + blockSizeY - 1 : n;
 
 	const int blockHeight = endX - startX + 1;
 	const int blockWidth = endY - startY + 1;
