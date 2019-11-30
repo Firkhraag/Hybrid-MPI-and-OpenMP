@@ -114,6 +114,9 @@ void passInformationBetweenProcesses(const int currentRank, const int numOfBlock
         MPI_Isend(sendUp, width, MPI_FLOAT, upperNeighborRank, 0, MPI_COMM_WORLD, &upSendRequest);
 	}
     if (bottom == true) {
+        if (currentRank == 1) {
+            printf("nooooo waaaay\n");
+        }
         sendBottom = (float*)malloc(width * sizeof(float));
         for (i = 0; i < width; i++) {
             sendBottom[i] = grid[height * blockWidth + (i + 1)];
@@ -360,7 +363,6 @@ int main(int argc, char **argv) {
             }
         }
 
-        printf("cur: %d\n", currentRank);
         // Pass residuals to adjacent processes
         passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
 
