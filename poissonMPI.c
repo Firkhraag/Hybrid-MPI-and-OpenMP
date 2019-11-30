@@ -31,7 +31,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
     for (int i = 1; i < blockHeight - 1; i++) {
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
-            result += grid1[index] * grid2[index];
+            result += stepX * stepY * grid1[index] * grid2[index];
             printf("i: %d\nj: %d\nresult: %f\n", i, j, grid1[index] * grid2[index]);
         }
     }
@@ -41,7 +41,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
     MPI_Reduce(&result, &sum, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
     // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
     MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    return stepX * stepY * sum;
+    return  sum;
 }
 
 // float dotProductMPI(float var, const int currentRank, const int size) {
