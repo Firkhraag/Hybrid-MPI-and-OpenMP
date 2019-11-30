@@ -248,7 +248,7 @@ int main(int argc, char **argv) {
     const float eps = 1e-5;
 
     // Square grid
-    const int n = 40;
+    const int n = 10;
 
     // Step
     const float stepX = (a2 - a1) / n;
@@ -390,6 +390,7 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
+                printf("Value: %f\n", rk[index]);
             }
         }
 
@@ -450,6 +451,8 @@ int main(int argc, char **argv) {
 
         // Wait for all processes to complete the step
         MPI_Barrier(MPI_COMM_WORLD);
+
+        break;
 
     } while (stopCondition > eps);
 
