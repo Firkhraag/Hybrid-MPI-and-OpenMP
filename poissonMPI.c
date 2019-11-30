@@ -243,24 +243,7 @@ int main(int argc, char **argv) {
 	const int blockHeight = endX - startX + 1;
 	const int blockWidth = endY - startY + 1;
 
-    if (currentRank == 0) {
-        printf("------\n");
-        printf("Size: %d\n", size);
-        printf("Rank: %d\n", currentRank);
-        printf("NumOfBlocksY: %d\n", numOfBlocksY);
-        printf("NumOfBlocksX: %d\n", numOfBlocksX);
-        printf("BlockPositionX: %d\n", blockPositionX);
-        printf("BlockPositionY: %d\n", blockPositionY);
-        printf("BlockSizeX: %d\n", blockSizeX);
-        printf("BlockSizeY: %d\n", blockSizeY);
-        printf("StartX: %d\n", startX);
-        printf("EndX: %d\n", endX);
-        printf("StartY: %d\n", startY);
-        printf("EndY: %d\n", endY);
-        printf("BlockHeight: %d\n", blockHeight);
-        printf("BlockWidth: %d\n", blockWidth);
-        printf("------\n");
-    }
+    printf("------\nSize: %d\nRank: %d\nNumOfBlocksY: %d\nNumOfBlocksX: %d\nBlockPositionX: %d\nBlockPositionY: %d\nBlockSizeX: %d\nBlockSizeY: %d\nStartX: %d\nEndX: %d\nStartY: %d\nEndY: %d\nBlockHeight: %d\nBlockWidth: %d\n------\n", size, currentRank, numOfBlocksY, numOfBlocksX, blockPositionX, blockPositionY, blockSizeX, blockSizeY, startX, endX, startY, endY, blockHeight, blockWidth);
 
     // Local grid approximation array
     float* grid = (float*)malloc(blockWidth * blockHeight * sizeof(float));
@@ -397,8 +380,7 @@ int main(int argc, char **argv) {
         MPI_Bcast(&tau2Global, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
         if (currentRank == 0) {
-            printf("tau1: %f\n", tau1);
-            printf("tau2: %f\n\n", tau2);
+            printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
         }
 
         float tau = tau1Global / tau2Global;
