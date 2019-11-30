@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     const float eps = 1e-5;
 
     // Square grid
-    const int n = 160;
+    const int n = 10;
 
     // Step
     const float stepX = (a2 - a1) / n;
@@ -191,8 +191,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-    FILE *f = fopen("poisson160.txt", "w");
-    // FILE *f = fopen("test2.txt", "w");
+    FILE *f = fopen("test2.txt", "w");
     if (f == NULL) {
         printf("Error opening file!\n");
         exit(1);
