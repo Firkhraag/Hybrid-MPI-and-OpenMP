@@ -26,7 +26,7 @@ float F(float x, float y) {
 }
 
 // Dot product
-float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, float stepX, float stepY) {
+float dotProduct(const int currentRank, float* grid1, float* grid2, const int blockWidth, const int blockHeight, const float stepX, const float stepY) {
     float result = 0;
     for (int i = 1; i < blockHeight - 1; i++) {
         for (int j = 1; j < blockWidth - 1; j++) {
@@ -380,8 +380,8 @@ int main(int argc, char **argv) {
         }
 
         // Find tau
-        float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
-        float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
+        float tau1 = dotProduct(currentRank, ark, rk, blockWidth, blockHeight, stepX, stepY);
+        float tau2 = dotProduct(currentRank, ark, ark, blockWidth, blockHeight, stepX, stepY);
 
         float tau1Global;
         // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
@@ -432,7 +432,7 @@ int main(int argc, char **argv) {
             fprintf(f, "Step: %d. Error: %f\n", step, globalError);
         }
 
-        stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
+        stopCondition = sqrt(dotProduct(currentRank, gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
 
         // Wait for all processes to complete the step
         // MPI_Barrier(MPI_COMM_WORLD);
