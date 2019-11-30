@@ -414,16 +414,16 @@ int main(int argc, char **argv) {
 
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
 
-        if (currentRank == 0) {
-            printf("stop: %f\n", stopCondition);
-        }
-
         // Wait for all processes to complete the step
         // MPI_Barrier(MPI_COMM_WORLD);
 
         // break;
 
     } while (stopCondition > eps);
+
+    if (currentRank == 0) {
+        printf("step: %d\n", step);
+    }
 
     free(gridDiff);
     free(rk);

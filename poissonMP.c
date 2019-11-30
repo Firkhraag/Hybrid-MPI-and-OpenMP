@@ -237,7 +237,7 @@ int main(int argc, char **argv) {
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
 
         tau = tau1 / tau2;
-        printf("tau: %f\n", tau);
+        // printf("tau: %f\n", tau);
 
         // Find new approximation
         #pragma omp parallel for
@@ -263,7 +263,11 @@ int main(int argc, char **argv) {
         fprintf(f, "Step: %d. Error: %f\n", step, error);
 
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
+
+        // printf("stop: %f\n", stopCondition);
     } while (stopCondition > eps);
+
+    printf("step: %d\n", step);
 
     free(gridDiff);
     free(rk);
