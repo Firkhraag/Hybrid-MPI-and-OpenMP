@@ -462,7 +462,9 @@ int main(int argc, char **argv) {
         MPI_Reduce(&error, &globalError, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Barrier(MPI_COMM_WORLD);
 
-        fprintf(f, "Step: %d. Error: %f\n", step, globalError);
+        if (currentRank == 0) {
+            fprintf(f, "Step: %d. Error: %f\n", step, globalError);
+        }
 
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
 
