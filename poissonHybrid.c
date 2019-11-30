@@ -276,8 +276,8 @@ int main(int argc, char **argv) {
     const int blockPositionX = currentRank / numOfBlocksY;
     const int blockPositionY = currentRank % numOfBlocksY;
 
-	const int blockSizeX = (n - 1) / numOfBlocksX;
-	const int blockSizeY = (n - 1) / numOfBlocksY;
+	const int blockSizeX = n / numOfBlocksX;
+	const int blockSizeY = n / numOfBlocksY;
 
 	const int startX = fmax(0, blockSizeX * blockPositionX - 1);
 	const int endX = blockPositionX + 1 < numOfBlocksX ? startX + blockSizeX : n;
@@ -316,6 +316,23 @@ int main(int argc, char **argv) {
 
     // Local residuals array
     float* rk = (float*)malloc(blockWidth * blockHeight * sizeof(float));
+    // Fill boundary with zeros
+    #pragma omp parallel for
+    for (int j = 0; j < blockWidth; j++) {
+		rk[j] = 0;
+    }
+    #pragma omp parallel for
+    for (int j = 0; j < blockWidth; j++) {
+		rk[(blockHeight - 1) * blockWidth + j] = 0;
+    }
+    #pragma omp parallel for
+    for (int i = 0; i < blockHeight; i++) {
+		rk[i * blockWidth] = 0;
+    }
+    #pragma omp parallel for
+    for (int i = 0; i < blockHeight; i++) {
+		rk[i * blockWidth + (blockWidth - 1)] = 0;
+    }
 
     // A * rk array
     float* ark = (float*)malloc(blockWidth * blockHeight * sizeof(float));
@@ -390,7 +407,7 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
-                printf("Value: %f\n", rk[index]);
+                // printf("Value: %f\n", rk[index]);
             }
         }
 
