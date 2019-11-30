@@ -35,13 +35,35 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
         }
     }
     result = result * stepX * stepY;
+    return result;
 
-    float sum;
-    // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
-    MPI_Reduce(&result, &sum, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-    // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
-    MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    return sum;
+    // float sum;
+    // // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
+    // MPI_Reduce(&result, &sum, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+    // // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
+    // MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    // return sum;
+}
+
+float processDot(float var, const int rank, const int size) const{
+      float *processes_sum;
+      if (rank == 0){
+          processes_sum = new float[size];
+      }
+
+      MPI_Gather(&var, 1, MPI_FLOAT, processes_sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+
+      float sum = 0.0f;
+      if (rank == 0) {
+          #pragma omp parallel
+          #pragma omp for schedule (static) reduction(+:sum)
+          for (int i = 0; i < size; i++)
+              sum += processes_sum[i];
+          delete [] processes_sum;
+      }
+
+      MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+      return sum;
 }
 
 // For each block
@@ -375,11 +397,11 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                if (currentRank == 0) {
-                    printf("i: %d\n", i);
-                    printf("j: %d\n", j);
-                    printf("ark[index]: %f\n", ark[index]);
-                }
+                // if (currentRank == 0) {
+                //     printf("i: %d\n", i);
+                //     printf("j: %d\n", j);
+                //     printf("ark[index]: %f\n", ark[index]);
+                // }
             }
         }
 
@@ -387,10 +409,13 @@ int main(int argc, char **argv) {
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
 
-        // if (currentRank == 0) {
-        //     printf("tau1: %f\n", tau1);
-        //     printf("tau2: %f\n\n", tau2);
-        // }
+	    tau1 = processDot(tau1, currentRank, size);
+	    tau2 = processDot(tau2, currentRank, size);
+
+        if (currentRank == 0) {
+            printf("tau1: %f\n", tau1);
+            printf("tau2: %f\n\n", tau2);
+        }
 
         tau = tau1 / tau2;
 

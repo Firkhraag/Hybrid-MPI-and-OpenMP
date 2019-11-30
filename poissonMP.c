@@ -229,9 +229,9 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                printf("i: %d\n", i);
-                printf("j: %d\n", j);
-                printf("ark[index]: %f\n", ark[index]);
+                // printf("i: %d\n", i);
+                // printf("j: %d\n", j);
+                // printf("ark[index]: %f\n", ark[index]);
             }
         }
 
