@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     const float eps = 1e-5;
 
     // Square grid
-    const int n = 10;
+    const int n = 20;
 
     // Step
     const float stepX = (a2 - a1) / n;
@@ -122,10 +122,28 @@ int main(int argc, char **argv) {
 
     // Local residuals array
     float* rk = (float*)malloc(blockWidth * blockHeight * sizeof(float));
+    // Fill boundary with zeros
+    #pragma omp parallel for
+    for (int j = 0; j < blockWidth; j++) {
+		rk[j] = 0;
+    }
+    #pragma omp parallel for
+    for (int j = 0; j < blockWidth; j++) {
+		rk[(blockHeight - 1) * blockWidth + j] = 0;
+    }
+    #pragma omp parallel for
+    for (int i = 0; i < blockHeight; i++) {
+		rk[i * blockWidth] = 0;
+    }
+    #pragma omp parallel for
+    for (int i = 0; i < blockHeight; i++) {
+		rk[i * blockWidth + (blockWidth - 1)] = 0;
+    }
 
     // A * rk array
     float* ark = (float*)malloc(blockWidth * blockHeight * sizeof(float));
 
+    // When to stop iterative method
     float stopCondition;
 
     // Find real values in the block
@@ -183,7 +201,7 @@ int main(int argc, char **argv) {
     do {
         step++;
         // Find residual using difference scheme
-        //#pragma omp parallel for
+        #pragma omp parallel for
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
@@ -195,14 +213,14 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
-                printf("Found: %f\n", rk[index]);
+                // printf("Found: %f\n", rk[index]);
             }
         }
 
-        printf("--------------\n");
+        // printf("--------------\n");
 
         // Find A * rk using difference scheme
-        //#pragma omp parallel for
+        #pragma omp parallel for
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
@@ -214,7 +232,7 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                printf("Found: %f\n", ark[index]);
+                // printf("Found: %f\n", ark[index]);
             }
         }
 
@@ -248,8 +266,8 @@ int main(int argc, char **argv) {
         fprintf(f, "Step: %d. Error: %f\n", step, error);
 
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
-        break;
-        printf("Stop: %f\n", stopCondition);
+        // break;
+        // printf("Stop: %f\n", stopCondition);
     } while (stopCondition > eps);
 
     free(gridDiff);
