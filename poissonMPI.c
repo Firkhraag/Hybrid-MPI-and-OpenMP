@@ -367,11 +367,11 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                if (currentRank == 0) {
-                    printf("i: %d\n", i);
-                    printf("j: %d\n", j);
-                    printf("ark[index]: %f\n", ark[index]);
-                }
+                // if (currentRank == 0) {
+                //     printf("i: %d\n", i);
+                //     printf("j: %d\n", j);
+                //     printf("ark[index]: %f\n", ark[index]);
+                // }
             }
         }
 
@@ -390,6 +390,14 @@ int main(int argc, char **argv) {
         MPI_Reduce(&tau2, &tau2Global, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
         MPI_Bcast(&tau2Global, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+
+        if (currentRank == 0) {
+                     printf("tau1: %f\n", tau1Global);
+        printf("tau2: %f\n", tau2Global);
+                } else {
+ printf("tau1: %f\n", tau1Global);
+        printf("tau2: %f\n", tau2Global);
+                }
 
         // if (currentRank == 0) {
         //     printf("tau1: %f\n", tau1);
