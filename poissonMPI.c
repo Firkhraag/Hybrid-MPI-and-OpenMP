@@ -196,7 +196,7 @@ int main(int argc, char **argv) {
     const float eps = 1e-5;
 
     // Square grid
-    const int n = 6;
+    const int n = 15;
 
     // Step
     const float stepX = (a2 - a1) / n;
@@ -338,8 +338,6 @@ int main(int argc, char **argv) {
             }
         }
 
-        // printf("********\n\n");
-
         // Pass residuals to adjacent processes
         passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
 
@@ -358,7 +356,6 @@ int main(int argc, char **argv) {
                 // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
             }
         }
-    
 
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY, startX, startY);
@@ -391,9 +388,7 @@ int main(int argc, char **argv) {
         }
 
         float globalError = 0;
-        // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
         MPI_Reduce(&error, &globalError, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-        // MPI_Barrier(MPI_COMM_WORLD);
         if (currentRank == 0) {
             fprintf(f, "Step: %d. Error: %f\n", step, globalError);
         }
@@ -413,7 +408,6 @@ int main(int argc, char **argv) {
         fprintf(f, "Execution time: %f\n", time_taken);
         fclose(f);
     }
-    
 
     // for (int i = 1; i < blockHeight - 1; i++) {
     //     for (int j = 1; j < blockWidth - 1; j++) {
