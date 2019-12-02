@@ -40,6 +40,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
     MPI_Reduce(&result, &sum, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
     // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
     MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD)
     return stepX * stepY * sum;
 }
 

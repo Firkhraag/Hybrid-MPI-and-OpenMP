@@ -34,7 +34,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
             result += grid1[index] * grid2[index];
-            // printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i, j, grid1[index], grid2[index], grid1[index] * grid2[index]);
+            printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i, j, grid1[index], grid2[index], grid1[index] * grid2[index]);
         }
     }
     result *= stepX * stepY;
@@ -219,9 +219,6 @@ int main(int argc, char **argv) {
             }
         }
 
-        // printf("********\n\n");
-
-
         // Find A * rk using difference scheme
         #pragma omp parallel for
         for (int i = 1; i < blockHeight - 1; i++) {
@@ -235,12 +232,7 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                    printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i, j, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
-                // printf("i: %d\n", i);
-                // printf("j: %d\n", j);
-                // printf("x: %f\n", x);
-                // printf("y: %f\n", y);
-                // printf("ark[index]: %f\n", ark[index]);
+                    // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i, j, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
             }
         }
 
