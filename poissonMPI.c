@@ -310,8 +310,9 @@ int main(int argc, char **argv) {
 		}
 	}
 
+    FILE *f;
     if (currentRank == 0) {
-        FILE *f = fopen("resultMPI.txt", "w");
+        f = fopen("resultMPI.txt", "w");
         if (f == NULL) {
             printf("Error opening file!\n");
             exit(1);
