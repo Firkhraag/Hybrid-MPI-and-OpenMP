@@ -32,7 +32,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
             result += grid1[index] * grid2[index];
-            printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i + startX, j + startY, grid1[index], grid2[index], grid1[index] * grid2[index]);
+            // printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i + startX, j + startY, grid1[index], grid2[index], grid1[index] * grid2[index]);
         }
     }
 
@@ -361,9 +361,12 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
+                    printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i, j, x, y, rk[index]);
                 // printf("Value: %f\n", rk[index]);
             }
         }
+
+        printf("********\n\n");
 
         // Pass residuals to adjacent processes
         passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
@@ -384,7 +387,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        printf("********\n\n");
+        
 
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY, startX, startY);
