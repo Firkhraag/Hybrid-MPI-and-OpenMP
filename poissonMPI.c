@@ -35,7 +35,6 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
             // printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i + startX, j + startY, grid1[index], grid2[index], grid1[index] * grid2[index]);
         }
     }
-
     float sum;
     // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
     MPI_Reduce(&result, &sum, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -43,28 +42,6 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
     MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
     return stepX * stepY * sum;
 }
-
-// float dotProductMPI(float var, const int currentRank, const int size) {
-//     float* sums;
-//     if (currentRank == 0){
-//         float* sums = (float*)malloc(size * sizeof(float));
-//     }
-
-//     // Gather to root: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm
-//     MPI_Gather(&var, 1, MPI_FLOAT, sums, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-
-//     float sum = 0;
-//     if (currentRank == 0) {
-//         // Sum all sums
-//         #pragma omp parallel for schedule (static) reduction(+:sum)
-//         for (int i = 0; i < size; i++)
-//             sum += sums[i];
-//         free(sums);
-//     }
-
-//     MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-//     return sum;
-// }
 
 // For each block
 void passInformationBetweenProcesses(const int currentRank, const int numOfBlocksX, const int numOfBlocksY, const int blockPositionX, const int blockPositionY, float* grid,
@@ -94,14 +71,14 @@ void passInformationBetweenProcesses(const int currentRank, const int numOfBlock
 
     /*
         Process grid
-        - - - - - - - -
+        x - - - - - - x
         - * * * * * * -
         - * + + + + * -
         - * + + + + * -
         - * + + + + * -
         - * + + + + * -
         - * * * * * * -
-        - - - - - - - -
+        x - - - - - - x
 
         - points that we receive from other processes
         * points that we send to other processes
@@ -115,17 +92,9 @@ void passInformationBetweenProcesses(const int currentRank, const int numOfBlock
     const int leftNeighborRank = numOfBlocksY * blockPositionX + (blockPositionY - 1);
     const int rightNeighborRank = numOfBlocksY * blockPositionX + (blockPositionY + 1);
 
-    // if (currentRank == 1) {
-    //     printf("upR: %d\n", upperNeighborRank);
-    //     printf("bottomR: %d\n", bottomNeighborRank);
-    //     printf("up: %d\n", up);
-    //     printf("bottom: %d\n", bottom);
-    // }
-
     MPI_Status status;
     MPI_Request leftSendRequest, rightSendRequest, upSendRequest, bottomSendRequest;
 
-    // int i;
     // Sending nodes near boundary to other processes
     if (up == true) {
         sendUp = (float*)malloc(width * sizeof(float));
@@ -217,9 +186,6 @@ int main(int argc, char **argv) {
 
     struct timeval start, end;
 
-    // Get start time
-    gettimeofday(&start, NULL);
-
     // Rectangle
     const float a1 = -1.0;
     const float a2 = 2.0;
@@ -230,7 +196,7 @@ int main(int argc, char **argv) {
     const float eps = 1e-5;
 
     // Square grid
-    const int n = 16;
+    const int n = 6;
 
     // Step
     const float stepX = (a2 - a1) / n;
@@ -245,6 +211,11 @@ int main(int argc, char **argv) {
 	MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &currentRank);
+
+    if (currentRank == 0) {
+        // Get start time
+        gettimeofday(&start, NULL);
+    }
 
     int numOfBlocksY = 1;
 	while (size > 2 * numOfBlocksY * numOfBlocksY) {
@@ -339,14 +310,15 @@ int main(int argc, char **argv) {
 		}
 	}
 
-    FILE *f = fopen("resultMPI.txt", "w");
-    if (f == NULL) {
-        printf("Error opening file!\n");
-        exit(1);
+    if (currentRank == 0) {
+        FILE *f = fopen("resultMPI.txt", "w");
+        if (f == NULL) {
+            printf("Error opening file!\n");
+            exit(1);
+        }
     }
     int step = -1;
     float error;
-
     do {
         step++;
         // Find residual using difference scheme
@@ -361,12 +333,11 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
-                    printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index]);
-                // printf("Value: %f\n", rk[index]);
+                    // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index]);
             }
         }
 
-        printf("********\n\n");
+        // printf("********\n\n");
 
         // Pass residuals to adjacent processes
         passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
@@ -383,7 +354,7 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
+                // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
             }
         }
 
@@ -391,15 +362,13 @@ int main(int argc, char **argv) {
 
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY, startX, startY);
-        if (currentRank == 0) {
-            printf("\ntau1: %f\n", tau1);
-        }
-        break;
+        // if (currentRank == 0) {
+        //     printf("\ntau1: %f\n", tau1);
+        // }
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY, startX, startY);
-
-        if (currentRank == 0) {
-            printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
-        }
+        // if (currentRank == 0) {
+        //     printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
+        // }
 
         float tau = tau1 / tau2;
 
@@ -426,33 +395,26 @@ int main(int argc, char **argv) {
         // Gathers to root and reduce with sum: send_data, recv_data, count, datatype, op, root, communicator
         MPI_Reduce(&error, &globalError, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         // MPI_Barrier(MPI_COMM_WORLD);
-
         if (currentRank == 0) {
             fprintf(f, "Step: %d. Error: %f\n", step, globalError);
         }
-
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY, startX, startY));
-
-        // Wait for all processes to complete the step
-        // MPI_Barrier(MPI_COMM_WORLD);
-
-
     } while (stopCondition > eps);
-
-    if (currentRank == 0) {
-        printf("step: %d\n", step);
-    }
 
     free(gridDiff);
     free(rk);
     free(ark);
 
-    // End time
-    gettimeofday(&end, NULL);
-    // In seconds
-    double time_taken = end.tv_sec + end.tv_usec / 1e6 -
-                        start.tv_sec - start.tv_usec / 1e6;
-    fprintf(f, "Execution time: %f\n", time_taken);
+    if (currentRank == 0) {
+        // End time
+        gettimeofday(&end, NULL);
+        // In seconds
+        double time_taken = end.tv_sec + end.tv_usec / 1e6 -
+                            start.tv_sec - start.tv_usec / 1e6;
+        fprintf(f, "Execution time: %f\n", time_taken);
+        fclose(f);
+    }
+    
 
     // for (int i = 1; i < blockHeight - 1; i++) {
     //     for (int j = 1; j < blockWidth - 1; j++) {
@@ -460,7 +422,6 @@ int main(int argc, char **argv) {
     //     }
     // }
 
-    fclose(f);
     free(realValues);
     free(grid);
 

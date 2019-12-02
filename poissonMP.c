@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     const float eps = 1e-5;
 
     // Square grid
-    const int n = 16;
+    const int n = 6;
 
     // Step
     const float stepX = (a2 - a1) / n;
@@ -215,15 +215,15 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
-                    printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i, j, x, y, rk[index]);
+                    // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i, j, x, y, rk[index]);
             }
         }
 
-        printf("********\n\n");
+        // printf("********\n\n");
 
 
         // Find A * rk using difference scheme
-        // #pragma omp parallel for
+        #pragma omp parallel for
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
@@ -235,7 +235,7 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                    printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i, j, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
+                    // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i, j, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
                 // printf("i: %d\n", i);
                 // printf("j: %d\n", j);
                 // printf("x: %f\n", x);
@@ -247,15 +247,11 @@ int main(int argc, char **argv) {
 
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
-        printf("\ntau1: %f\n", tau1);
-        break;
-        float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);
-
-        
-        printf("tau2: %f\n", tau2);
+        // printf("\ntau1: %f\n", tau1);
+        float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);    
+        // printf("tau2: %f\n", tau2);
 
         tau = tau1 / tau2;
-        // printf("tau: %f\n", tau);
 
         // Find new approximation
         #pragma omp parallel for
@@ -284,8 +280,6 @@ int main(int argc, char **argv) {
         // printf("stop: %f\n", stopCondition);
     } while (stopCondition > eps);
 
-    printf("step: %d\n", step);
-
     free(gridDiff);
     free(rk);
     free(ark);
@@ -306,7 +300,6 @@ int main(int argc, char **argv) {
     fclose(f);
     free(realValues);
     free(grid);
-
 
     return 0;
 }
