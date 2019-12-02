@@ -362,6 +362,7 @@ int main(int argc, char **argv) {
         if (currentRank == 0) {
             printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
         }
+        break;
 
         float tau = tau1 / tau2;
 

@@ -250,6 +250,7 @@ int main(int argc, char **argv) {
         printf("\ntau1: %f\n", tau1);
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);    
         printf("tau2: %f\n", tau2);
+        break;
 
         tau = tau1 / tau2;
 
