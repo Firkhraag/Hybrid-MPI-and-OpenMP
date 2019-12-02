@@ -358,18 +358,17 @@ int main(int argc, char **argv) {
                 // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
             }
         }
-
-        
+    
 
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY, startX, startY);
-        // if (currentRank == 0) {
-        //     printf("\ntau1: %f\n", tau1);
-        // }
+        if (currentRank == 0) {
+            printf("\ntau1: %f\n", tau1);
+        }
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY, startX, startY);
-        // if (currentRank == 0) {
-        //     printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
-        // }
+        if (currentRank == 0) {
+            printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
+        }
 
         float tau = tau1 / tau2;
 
