@@ -302,9 +302,16 @@ int main(int argc, char **argv) {
 		}
     }
 
+    // // Initializing grid with starting values
+    // for (int i = 1; i < blockHeight - 1; i++) {
+	// 	for (int j = 1; j < blockWidth - 1; j++) {
+	// 		grid[i * blockWidth + j] = 0;
+	// 	}
+	// }
+
     // Initializing grid with starting values
-    for (int i = 1; i < blockHeight - 1; i++) {
-		for (int j = 1; j < blockWidth - 1; j++) {
+    for (int i = 0; i < blockHeight; i++) {
+		for (int j = 0; j < blockWidth; j++) {
 			grid[i * blockWidth + j] = 0;
 		}
 	}
