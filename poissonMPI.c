@@ -196,7 +196,7 @@ int main(int argc, char **argv) {
     const float eps = 1e-5;
 
     // Square grid
-    const int n = 20;
+    const int n = strtol(argv[1], NULL, 10);
 
     // Step
     const float stepX = (a2 - a1) / n;

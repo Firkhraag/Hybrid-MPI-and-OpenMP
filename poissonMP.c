@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     const float eps = 1e-5;
 
     // Square grid
-    const int n = 40;
+    const int n = 20;
 
     // Step
     const float stepX = (a2 - a1) / n;
