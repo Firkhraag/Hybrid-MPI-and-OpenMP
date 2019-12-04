@@ -32,7 +32,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
             result += grid1[index] * grid2[index];
-            // printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i + startX, j + startY, grid1[index], grid2[index], grid1[index] * grid2[index]);
+            printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i + startX, j + startY, grid1[index], grid2[index], grid1[index] * grid2[index]);
         }
     }
     float sum;
@@ -40,7 +40,6 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
     MPI_Reduce(&result, &sum, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
     // Broadcasts from root to other processes: buffer, count, datatype, root, communicator
     MPI_Bcast(&sum, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
-    MPI_Barrier(MPI_COMM_WORLD)
     return stepX * stepY * sum;
 }
 
@@ -359,11 +358,15 @@ int main(int argc, char **argv) {
 
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY, startX, startY);
+        if (currentRank == 0) {
+            printf("tau1: %f\n\n", tau1);
+        }
+        break;
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY, startX, startY);
         if (currentRank == 0) {
             printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
         }
-        break;
+        
 
         float tau = tau1 / tau2;
 
