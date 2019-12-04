@@ -217,6 +217,7 @@ int main(int argc, char **argv) {
     }
 
     int numOfBlocksY = 1;
+    // Number of processes must have common denominator 2 or be equal to 1
 	while (size > 2 * numOfBlocksY * numOfBlocksY) {
 		numOfBlocksY *= 2;
 	}
@@ -226,14 +227,15 @@ int main(int argc, char **argv) {
     const int blockPositionX = currentRank / numOfBlocksY;
     const int blockPositionY = currentRank % numOfBlocksY;
 
+    // Number of nodes / num of blocks
     const int blockSizeX = (n + 1) / numOfBlocksX;
 	const int blockSizeY = (n + 1) / numOfBlocksY;
 
-	const int startX = fmax(0, blockSizeX * blockPositionX - blockPositionX);
-	const int endX = blockPositionX + 1 < numOfBlocksX ? startX + blockSizeX : n;
+	const int startX = fmax(0, blockSizeX * blockPositionX - 1);
+	const int endX = blockPositionX + 1 < numOfBlocksX ? blockSizeX * (blockPositionX + 1) : n;
 
-	const int startY = fmax(0, blockSizeY * blockPositionY - blockPositionY);
-	const int endY = blockPositionY + 1 < numOfBlocksY ? startY + blockSizeY : n;
+	const int startY = fmax(0, blockSizeY * blockPositionY - 1);
+	const int endY = blockPositionY + 1 < numOfBlocksY ? blockSizeY * (blockPositionY + 1) : n;
 
 	const int blockHeight = endX - startX + 1;
 	const int blockWidth = endY - startY + 1;
