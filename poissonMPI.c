@@ -32,7 +32,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
             result += grid1[index] * grid2[index];
-            printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i + startX, j + startY, grid1[index], grid2[index], grid1[index] * grid2[index]);
+            // printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i + startX, j + startY, grid1[index], grid2[index], grid1[index] * grid2[index]);
         }
     }
     float sum;
@@ -359,7 +359,7 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
+                printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
             }
         }
 

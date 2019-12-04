@@ -34,7 +34,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
             result += grid1[index] * grid2[index];
-            printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i, j, grid1[index], grid2[index], grid1[index] * grid2[index]);
+            // printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i, j, grid1[index], grid2[index], grid1[index] * grid2[index]);
         }
     }
     result *= stepX * stepY;
@@ -232,7 +232,7 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                    // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i, j, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
+                    printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i, j, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
             }
         }
 
@@ -240,9 +240,10 @@ int main(int argc, char **argv) {
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
         printf("\ntau1: %f\n", tau1);
+        break;
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);    
         printf("tau2: %f\n", tau2);
-        break;
+        
 
         tau = tau1 / tau2;
 
