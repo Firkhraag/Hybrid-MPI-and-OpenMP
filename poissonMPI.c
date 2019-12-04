@@ -340,7 +340,7 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
-                    if ((i + startX == 7) && (j + startY == 7)) {
+                    if ((i + startX == 6) && (j + startY == 7)) {
                         printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index]);
                     }
             }
