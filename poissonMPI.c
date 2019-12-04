@@ -32,6 +32,7 @@ float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, fl
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
             result += grid1[index] * grid2[index];
+            // Debug
             // printf("i: %d\nj: %d\nv1: %f\nv2: %f\nresult: %f\n", i + startX, j + startY, grid1[index], grid2[index], grid1[index] * grid2[index]);
         }
     }
@@ -243,6 +244,7 @@ int main(int argc, char **argv) {
     const int blockSizeX = (n + 1) / numOfBlocksX;
 	const int blockSizeY = (n + 1) / numOfBlocksY;
 
+    // +------+
 	const int startX = fmax(0, blockSizeX * blockPositionX - 1);
 	const int endX = blockPositionX + 1 < numOfBlocksX ? blockSizeX * (blockPositionX + 1) : n;
 
@@ -252,7 +254,8 @@ int main(int argc, char **argv) {
 	const int blockHeight = endX - startX + 1;
 	const int blockWidth = endY - startY + 1;
 
-    printf("------\nSize: %d\nRank: %d\nNumOfBlocksY: %d\nNumOfBlocksX: %d\nBlockPositionX: %d\nBlockPositionY: %d\nBlockSizeX: %d\nBlockSizeY: %d\nStartX: %d\nEndX: %d\nStartY: %d\nEndY: %d\nBlockHeight: %d\nBlockWidth: %d\n------\n", size, currentRank, numOfBlocksY, numOfBlocksX, blockPositionX, blockPositionY, blockSizeX, blockSizeY, startX, endX, startY, endY, blockHeight, blockWidth);
+    // Debug
+    // printf("------\nSize: %d\nRank: %d\nNumOfBlocksY: %d\nNumOfBlocksX: %d\nBlockPositionX: %d\nBlockPositionY: %d\nBlockSizeX: %d\nBlockSizeY: %d\nStartX: %d\nEndX: %d\nStartY: %d\nEndY: %d\nBlockHeight: %d\nBlockWidth: %d\n------\n", size, currentRank, numOfBlocksY, numOfBlocksX, blockPositionX, blockPositionY, blockSizeX, blockSizeY, startX, endX, startY, endY, blockHeight, blockWidth);
 
     // Local grid approximation array
     float* grid = (float*)malloc(blockWidth * blockHeight * sizeof(float));
@@ -284,19 +287,12 @@ int main(int argc, char **argv) {
 
     float stopCondition;
 
-    // Find real values in the block
+    // Find values of given function in nodes
 	for (int i = 1; i < blockHeight - 1; i++) {
 		for (int j = 1; j < blockWidth - 1; j++) {
 			realValues[i * blockWidth + j] = u(a1 + (i + startX) * stepX, b1 + (j + startY) * stepY);
 		}
 	}
-
-    // // Initializing grid with starting values
-    // for (int i = 1; i < blockHeight - 1; i++) {
-	// 	for (int j = 1; j < blockWidth - 1; j++) {
-	// 		grid[i * blockWidth + j] = 0;
-	// 	}
-	// }
 
     // Initializing grid with starting values
     for (int i = 0; i < blockHeight; i++) {
@@ -354,13 +350,10 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
-                    if ((i + startX == 7) && (j + startY == 7)) {
-                        printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index]);
-                    }
+                    // Debug
+                    // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index]);
             }
         }
-
-        // printf("\n\n");
 
         // Pass residuals to adjacent processes
         passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
@@ -377,24 +370,19 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                if ((i + startX == 6) && (j + startY == 7)) {
-                    printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
-                }
+                // Debug
+                // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
             }
         }
 
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY, startX, startY);
-        if (currentRank == 0) {
-            printf("tau1: %f\n\n", tau1);
-        }
-        break;
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY, startX, startY);
-        if (currentRank == 0) {
-            printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
-        }
+        // Debug
+        // if (currentRank == 0) {
+        //     printf("tau1: %f\ntau2: %f\n\n", tau1, tau2);
+        // }
         
-
         float tau = tau1 / tau2;
 
         // Find new approximation
@@ -439,12 +427,6 @@ int main(int argc, char **argv) {
         fprintf(f, "Execution time: %f\n", time_taken);
         fclose(f);
     }
-
-    // for (int i = 1; i < blockHeight - 1; i++) {
-    //     for (int j = 1; j < blockWidth - 1; j++) {
-    //         fprintf(f, "Original function: %f, Approximated result: %f\n", realValues[i * blockWidth + j], grid[i * blockWidth + j]);
-    //     }
-    // }
 
     free(realValues);
     free(grid);

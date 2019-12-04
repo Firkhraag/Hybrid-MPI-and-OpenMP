@@ -29,7 +29,7 @@ float F(float x, float y) {
 // Dot product
 float dotProduct(float* grid1, float* grid2, int blockWidth, int blockHeight, float stepX, float stepY) {
     float result = 0;
-    // #pragma omp parallel for reduction(+:result)
+    #pragma omp parallel for reduction(+:result)
     for (int i = 1; i < blockHeight - 1; i++) {
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
@@ -93,25 +93,6 @@ int main(int argc, char **argv) {
 
 	const int blockHeight = endX - startX + 1;
 	const int blockWidth = endY - startY + 1;
-
-    if (currentRank == 0) {
-        printf("------\n");
-        printf("Size: %d\n", size);
-        printf("Rank: %d\n", currentRank);
-        printf("NumOfBlocksY: %d\n", numOfBlocksY);
-        printf("NumOfBlocksX: %d\n", numOfBlocksX);
-        printf("BlockPositionX: %d\n", blockPositionX);
-        printf("BlockPositionY: %d\n", blockPositionY);
-        printf("BlockSizeX: %d\n", blockSizeX);
-        printf("BlockSizeY: %d\n", blockSizeY);
-        printf("StartX: %d\n", startX);
-        printf("EndX: %d\n", endX);
-        printf("StartY: %d\n", startY);
-        printf("EndY: %d\n", endY);
-        printf("BlockHeight: %d\n", blockHeight);
-        printf("BlockWidth: %d\n", blockWidth);
-        printf("------\n");
-    }
 
     // Local grid approximation array
     float* grid = (float*)malloc(blockWidth * blockHeight * sizeof(float));
@@ -215,11 +196,11 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
-                    printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i, j, x, y, rk[index]);
+                    // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i, j, x, y, rk[index]);
             }
         }
 
-        printf("\n\n");
+        // printf("\n\n");
 
         // Find A * rk using difference scheme
         #pragma omp parallel for
@@ -234,17 +215,16 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((rk[index + 1] - rk[index]) -
                     (rk[index] - rk[index - 1]))) +
                     q(x, y) * rk[index];
-                    printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i, j, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
+                    // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index + blockWidth]: %f\nrk[index - blockWidth]: %f\nrk[index + 1]: %f\nrk[index - 1]: %f\nrk[index]: %f\n", i, j, x, y, rk[index + blockWidth], rk[index - blockWidth], rk[index + 1], rk[index - 1], rk[index]);
             }
         }
 
 
         // Find tau
         float tau1 = dotProduct(ark, rk, blockWidth, blockHeight, stepX, stepY);
-        printf("\ntau1: %f\n", tau1);
-        break;
+        // printf("\ntau1: %f\n", tau1);
         float tau2 = dotProduct(ark, ark, blockWidth, blockHeight, stepX, stepY);    
-        printf("tau2: %f\n", tau2);
+        // printf("tau2: %f\n", tau2);
         
 
         tau = tau1 / tau2;
