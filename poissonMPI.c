@@ -416,7 +416,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Completed for size: %d and grid: %d\n", size, n);
-    printf("Execution time: %f\n", time_taken);
+    printf("Execution time: %f\n", timeTaken);
     printf("Error: %f\n", error);
 
     return 0;
