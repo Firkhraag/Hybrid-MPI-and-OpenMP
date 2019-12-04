@@ -217,11 +217,23 @@ int main(int argc, char **argv) {
     }
 
     int numOfBlocksY = 1;
-    // Number of processes must have common denominator 2 or be equal to 1
+    int numOfBlocksX = 1;
+    // When number of processes is a power of 2
 	while (size > 2 * numOfBlocksY * numOfBlocksY) {
 		numOfBlocksY *= 2;
 	}
-	const int numOfBlocksX = size / numOfBlocksY;
+	numOfBlocksX = size / numOfBlocksY;
+    // Other cases
+    if (size == 10) {
+        numOfBlocksY = 2;
+        numOfBlocksX = 5;
+    } else if (size == 20) {
+        numOfBlocksY = 4;
+        numOfBlocksX = 5;
+    } else if (size == 40) {
+        numOfBlocksY = 5;
+        numOfBlocksX = 8;
+    }
 
 	// Global block position
     const int blockPositionX = currentRank / numOfBlocksY;
