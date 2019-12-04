@@ -344,7 +344,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        MPI_Barrier(MPI_COMM_WORLD)
+        MPI_Barrier(MPI_COMM_WORLD);
 
         // printf("\n\n");
 
@@ -393,7 +393,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        MPI_Barrier(MPI_COMM_WORLD)
+        MPI_Barrier(MPI_COMM_WORLD);
         passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, grid, blockWidth, blockHeight);
 
         // Deviation
