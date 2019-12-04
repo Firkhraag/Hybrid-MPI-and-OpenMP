@@ -277,6 +277,20 @@ int main(int argc, char **argv) {
 		}
 	}
 
+    // // Initializing grid with starting values
+    // for (int i = 1; i < blockHeight - 1; i++) {
+	// 	for (int j = 1; j < blockWidth - 1; j++) {
+	// 		grid[i * blockWidth + j] = 0;
+	// 	}
+	// }
+
+    // Initializing grid with starting values
+    for (int i = 0; i < blockHeight; i++) {
+		for (int j = 0; j < blockWidth; j++) {
+			grid[i * blockWidth + j] = 0;
+		}
+	}
+
     // Find global boundary values in the block
 	if (startX == 0) {
 		for (int j = 0; j < blockWidth; j++) {
@@ -301,20 +315,6 @@ int main(int argc, char **argv) {
             grid[i * blockWidth + (blockWidth - 1)] = u(a1 + (i + startX) * stepX, b1 + (blockWidth - 1 + startY) * stepY);
 		}
     }
-
-    // // Initializing grid with starting values
-    // for (int i = 1; i < blockHeight - 1; i++) {
-	// 	for (int j = 1; j < blockWidth - 1; j++) {
-	// 		grid[i * blockWidth + j] = 0;
-	// 	}
-	// }
-
-    // Initializing grid with starting values
-    for (int i = 0; i < blockHeight; i++) {
-		for (int j = 0; j < blockWidth; j++) {
-			grid[i * blockWidth + j] = 0;
-		}
-	}
 
     FILE *f;
     if (currentRank == 0) {
