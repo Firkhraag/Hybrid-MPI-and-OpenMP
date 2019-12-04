@@ -238,7 +238,7 @@ int main(int argc, char **argv) {
 	const int blockHeight = endX - startX + 1;
 	const int blockWidth = endY - startY + 1;
 
-    // printf("------\nSize: %d\nRank: %d\nNumOfBlocksY: %d\nNumOfBlocksX: %d\nBlockPositionX: %d\nBlockPositionY: %d\nBlockSizeX: %d\nBlockSizeY: %d\nStartX: %d\nEndX: %d\nStartY: %d\nEndY: %d\nBlockHeight: %d\nBlockWidth: %d\n------\n", size, currentRank, numOfBlocksY, numOfBlocksX, blockPositionX, blockPositionY, blockSizeX, blockSizeY, startX, endX, startY, endY, blockHeight, blockWidth);
+    printf("------\nSize: %d\nRank: %d\nNumOfBlocksY: %d\nNumOfBlocksX: %d\nBlockPositionX: %d\nBlockPositionY: %d\nBlockSizeX: %d\nBlockSizeY: %d\nStartX: %d\nEndX: %d\nStartY: %d\nEndY: %d\nBlockHeight: %d\nBlockWidth: %d\n------\n", size, currentRank, numOfBlocksY, numOfBlocksX, blockPositionX, blockPositionY, blockSizeX, blockSizeY, startX, endX, startY, endY, blockHeight, blockWidth);
 
     // Local grid approximation array
     float* grid = (float*)malloc(blockWidth * blockHeight * sizeof(float));
@@ -340,7 +340,7 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
-                    if ((i + startX == 6) && (j + startY == 7)) {
+                    if ((i + startX == 7) && (j + startY == 7)) {
                         printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index]);
                     }
             }
