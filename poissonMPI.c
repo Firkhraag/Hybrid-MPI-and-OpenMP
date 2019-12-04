@@ -238,7 +238,7 @@ int main(int argc, char **argv) {
 	const int blockHeight = endX - startX + 1;
 	const int blockWidth = endY - startY + 1;
 
-    printf("------\nSize: %d\nRank: %d\nNumOfBlocksY: %d\nNumOfBlocksX: %d\nBlockPositionX: %d\nBlockPositionY: %d\nBlockSizeX: %d\nBlockSizeY: %d\nStartX: %d\nEndX: %d\nStartY: %d\nEndY: %d\nBlockHeight: %d\nBlockWidth: %d\n------\n", size, currentRank, numOfBlocksY, numOfBlocksX, blockPositionX, blockPositionY, blockSizeX, blockSizeY, startX, endX, startY, endY, blockHeight, blockWidth);
+    // printf("------\nSize: %d\nRank: %d\nNumOfBlocksY: %d\nNumOfBlocksX: %d\nBlockPositionX: %d\nBlockPositionY: %d\nBlockSizeX: %d\nBlockSizeY: %d\nStartX: %d\nEndX: %d\nStartY: %d\nEndY: %d\nBlockHeight: %d\nBlockWidth: %d\n------\n", size, currentRank, numOfBlocksY, numOfBlocksX, blockPositionX, blockPositionY, blockSizeX, blockSizeY, startX, endX, startY, endY, blockHeight, blockWidth);
 
     // Local grid approximation array
     float* grid = (float*)malloc(blockWidth * blockHeight * sizeof(float));
@@ -346,7 +346,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        printf("\n\n");
+        // printf("\n\n");
 
         // Pass residuals to adjacent processes
         passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
