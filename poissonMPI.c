@@ -326,7 +326,11 @@ int main(int argc, char **argv) {
 		}
     }
 
+    int step = -1;
     do {
+        if (currentRank == 0) {
+            step++;
+        }
         // Find residual using difference scheme
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
@@ -415,6 +419,7 @@ int main(int argc, char **argv) {
     if (currentRank == 0) {
         printf("Completed for size: %d and grid: %d\n", size, n);
         printf("Execution time: %f\n", timeTaken);
+        printf("Steps taken: %d\n", step);
         printf("Error: %f\n", globalError);
     }
 
