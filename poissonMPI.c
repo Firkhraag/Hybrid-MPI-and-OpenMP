@@ -393,12 +393,12 @@ int main(int argc, char **argv) {
     free(rk);
     free(ark);
 
+    double timeTaken;
     if (currentRank == 0) {
         // End time
         gettimeofday(&end, NULL);
         // In seconds
-        double time_taken = end.tv_sec + end.tv_usec / 1e6 -
-                            start.tv_sec - start.tv_usec / 1e6;
+        timeTaken = end.tv_sec + end.tv_usec / 1e6 - start.tv_sec - start.tv_usec / 1e6;
     }
 
     free(realValues);
