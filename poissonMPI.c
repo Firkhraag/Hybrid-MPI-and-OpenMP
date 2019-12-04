@@ -340,9 +340,11 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
-                    // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index]);
+                    printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i + startX, j + startY, x, y, rk[index]);
             }
         }
+
+        printf("\n\n");
 
         // Pass residuals to adjacent processes
         passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);

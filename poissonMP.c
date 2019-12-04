@@ -215,9 +215,11 @@ int main(int argc, char **argv) {
                     stepYCoeff * k(x) * ((grid[index + 1] - grid[index]) -
                     (grid[index] - grid[index - 1]))) +
                     q(x, y) * grid[index] - F(x, y);
-                    // printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i, j, x, y, rk[index]);
+                    printf("i: %d\nj: %d\nx: %f\ny: %f\nrk[index]: %f\n", i, j, x, y, rk[index]);
             }
         }
+
+        printf("\n\n");
 
         // Find A * rk using difference scheme
         #pragma omp parallel for
