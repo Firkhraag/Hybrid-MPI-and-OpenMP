@@ -462,5 +462,7 @@ int main(int argc, char **argv) {
     free(grid);
 
     MPI_Finalize();
+
+    fprintf(f, "Completed for size: %d and grid: %d\n", size, n);
     return 0;
 }
