@@ -873,6 +873,7 @@ int main(int argc, char **argv) {
 
     // Deviation
     float error = 0;
+    #pragma omp parallel for reduction(+:error)
     for (int i = 1; i < blockHeight - 1; i++) {
         for (int j = 1; j < blockWidth - 1; j++) {
             const int index = i * blockWidth + j;
