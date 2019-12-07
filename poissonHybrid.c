@@ -406,9 +406,10 @@ int main(int argc, char **argv) {
         passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, grid, blockWidth, blockHeight);
 
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY, startX, startY));
-        if (currentRank == 0) {
-            printf("Step: %d\n", step);
-        }
+        // Debug
+        // if (currentRank == 0) {
+        //     printf("Step: %d\n", step);
+        // }
     } while (stopCondition > eps);
 
     free(gridDiff);
