@@ -55,10 +55,10 @@ int main(int argc, char **argv) {
     const float b2 = 2.0;
 
     // Epsilon
-    const float eps = 1e-5;
+    const float eps = 1e-4;
 
     // Square grid
-    const int n = 20;
+    const int n = 200;
 
     // Step
     const float stepX = (a2 - a1) / n;

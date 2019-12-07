@@ -193,7 +193,7 @@ int main(int argc, char **argv) {
     const float b2 = 2.0;
 
     // Epsilon
-    const float eps = 1e-4;
+    const float eps = 1e-5;
 
     // Square grid
     const int n = strtol(argv[1], NULL, 10);
