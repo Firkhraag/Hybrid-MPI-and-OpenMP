@@ -732,15 +732,19 @@ int main(int argc, char **argv) {
     // Local residuals array
     float* rk = (float*)malloc(blockWidth * blockHeight * sizeof(float));
     // Fill boundary with zeros
+    #pragma omp parallel for
     for (int j = 0; j < blockWidth; j++) {
 		rk[j] = 0;
     }
+    #pragma omp parallel for
     for (int j = 0; j < blockWidth; j++) {
 		rk[(blockHeight - 1) * blockWidth + j] = 0;
     }
+    #pragma omp parallel for
     for (int i = 0; i < blockHeight; i++) {
 		rk[i * blockWidth] = 0;
     }
+    #pragma omp parallel for
     for (int i = 0; i < blockHeight; i++) {
 		rk[i * blockWidth + (blockWidth - 1)] = 0;
     }
@@ -751,6 +755,7 @@ int main(int argc, char **argv) {
     float stopCondition;
 
     // Find values of given function in nodes
+    #pragma omp parallel for
 	for (int i = 1; i < blockHeight - 1; i++) {
 		for (int j = 1; j < blockWidth - 1; j++) {
 			realValues[i * blockWidth + j] = u(a1 + (i + startX) * stepX, b1 + (j + startY) * stepY);
@@ -758,6 +763,7 @@ int main(int argc, char **argv) {
 	}
 
     // Initializing grid with starting values
+    #pragma omp parallel for
     for (int i = 0; i < blockHeight; i++) {
 		for (int j = 0; j < blockWidth; j++) {
 			grid[i * blockWidth + j] = 0;
@@ -795,6 +801,7 @@ int main(int argc, char **argv) {
             step++;
         }
         // Find residual using difference scheme
+        #pragma omp parallel for
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
@@ -815,6 +822,7 @@ int main(int argc, char **argv) {
         passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, rk, blockWidth, blockHeight);
 
         // Find A * rk using difference scheme
+        #pragma omp parallel for
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const float x = a1 + (i + startX) * stepX;
@@ -842,6 +850,7 @@ int main(int argc, char **argv) {
         float tau = tau1 / tau2;
 
         // Find new approximation
+        #pragma omp parallel for
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
                 const int index = i * blockWidth + j;
