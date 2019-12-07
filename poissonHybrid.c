@@ -880,7 +880,7 @@ int main(int argc, char **argv) {
         passInformationBetweenProcesses(currentRank, numOfBlocksX, numOfBlocksY, blockPositionX, blockPositionY, grid, blockWidth, blockHeight);
 
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY, startX, startY));
-        prinf("Step: %d", step);
+        printf("Step: %d", step);
     } while (stopCondition > eps);
 
     free(gridDiff);
