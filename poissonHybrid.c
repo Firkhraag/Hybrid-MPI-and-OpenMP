@@ -772,24 +772,28 @@ int main(int argc, char **argv) {
 
     // Find global boundary values in the block
 	if (startX == 0) {
+        #pragma omp parallel for
 		for (int j = 0; j < blockWidth; j++) {
 			grid[j] = u(a1 + startX * stepX, b1 + (j + startY) * stepY);
 		}
 	}
 
 	if (endX == n) {
+        #pragma omp parallel for
 		for (int j = 0; j < blockWidth; j++) {
             grid[(blockHeight - 1) * blockWidth + j] = u(a1 + (blockHeight - 1 + startX) * stepX, b1 + (j + startY) * stepY);
 		}
 	}
 
 	if (startY == 0) {
+        #pragma omp parallel for
 		for (int i = 0; i < blockHeight; i++) {
             grid[i * blockWidth] = u(a1 + (i + startX) * stepX, b1 + startY * stepY);
 		}
 	}
 
 	if (endY == n) {
+        #pragma omp parallel for
 		for (int i = 0; i < blockHeight; i++) {
             grid[i * blockWidth + (blockWidth - 1)] = u(a1 + (i + startX) * stepX, b1 + (blockWidth - 1 + startY) * stepY);
 		}
