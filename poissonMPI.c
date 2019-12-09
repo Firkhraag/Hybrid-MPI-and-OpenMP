@@ -415,7 +415,7 @@ int main(int argc, char **argv) {
     if (currentRank == 0) {
         printf("Completed for size: %d and grid: %d\n", size, n);
         printf("Execution time: %f\n", timeTaken);
-        printf("Steps taken: %d\n", step);
+        // printf("Steps taken: %d\n", step);
         // printf("Error: %f\n", globalError);
     }
 
