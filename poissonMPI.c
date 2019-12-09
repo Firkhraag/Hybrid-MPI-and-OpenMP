@@ -326,11 +326,7 @@ int main(int argc, char **argv) {
 		}
     }
 
-    int step = -1;
     do {
-        if (currentRank == 0) {
-            step++;
-        }
         // Find residual using difference scheme
         for (int i = 1; i < blockHeight - 1; i++) {
             for (int j = 1; j < blockWidth - 1; j++) {
@@ -405,28 +401,27 @@ int main(int argc, char **argv) {
         timeTaken = end.tv_sec + end.tv_usec / 1e6 - start.tv_sec - start.tv_usec / 1e6;
     }
 
-    // Deviation
-    float error = 0;
-    for (int i = 1; i < blockHeight - 1; i++) {
-        for (int j = 1; j < blockWidth - 1; j++) {
-            const int index = i * blockWidth + j;
-            error += (realValues[index] - grid[index]) * (realValues[index] - grid[index]);
-        }
-    }
-    float globalError = 0;
-    MPI_Reduce(&error, &globalError, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+    // // Deviation
+    // float error = 0;
+    // for (int i = 1; i < blockHeight - 1; i++) {
+    //     for (int j = 1; j < blockWidth - 1; j++) {
+    //         const int index = i * blockWidth + j;
+    //         error += (realValues[index] - grid[index]) * (realValues[index] - grid[index]);
+    //     }
+    // }
+    // float globalError = 0;
+    // MPI_Reduce(&error, &globalError, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (currentRank == 0) {
         printf("Completed for size: %d and grid: %d\n", size, n);
         printf("Execution time: %f\n", timeTaken);
         printf("Steps taken: %d\n", step);
-        printf("Error: %f\n", globalError);
+        // printf("Error: %f\n", globalError);
     }
 
     free(realValues);
     free(grid);
 
-    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
 
     return 0;

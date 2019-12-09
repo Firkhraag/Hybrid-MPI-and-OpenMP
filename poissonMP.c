@@ -250,7 +250,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        fprintf(f, "Step: %d. Error: %f\n", step, error);
+        fprintf(f, "%f\n", error);
 
         stopCondition = sqrt(dotProduct(gridDiff, gridDiff, blockWidth, blockHeight, stepX, stepY));
         // printf("stop: %f\n", stopCondition);
